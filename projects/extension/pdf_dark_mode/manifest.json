@@ -1,0 +1,38 @@
+{
+  "manifest_version": 2,
+  "name": "PDF Dark Mode Toggle",
+  "version": "1.0",
+  "description": "Toggle dark mode in PDFs with Ctrl+Q",
+  "icons": {
+    "48": "icon.png",
+    "96": "icon.png"
+  },
+  "permissions": [
+    "activeTab",
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["bookmarklet.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ],
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_title": "Toggle PDF Dark Mode (Ctrl+Q)"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "commands": {
+    "toggle-dark-mode": {
+      "suggested_key": {
+        "default": "Ctrl+Q"
+      },
+      "description": "Toggle dark mode"
+    }
+  }
+}
+
