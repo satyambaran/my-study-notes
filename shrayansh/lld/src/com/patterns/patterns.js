@@ -4,7 +4,7 @@
 These patterns deal with object creation mechanisms, trying to create objects in a manner suitable for the situation.
 
 	•	Singleton: Ensures a class has only one instance and provides a global point of access to it.
-            Example: Configuration manager.
+            Example: Configuration manager
 	•	Factory Method: Defines an interface for creating an object, but allows subclasses to alter the type of objects that will be created.
             Example: Document creation in different formats (PDF, Word).
 	•	Abstract Factory: Provides an interface for creating families of related or dependent objects without specifying their concrete classes.
@@ -13,6 +13,8 @@ These patterns deal with object creation mechanisms, trying to create objects in
             Example: Complex document construction, such as building a computer with various components.
 	•	Prototype: Creates new objects by copying an existing object, known as the prototype.
             Example: Cloning objects in a game.
+
+// get deep copy and shallow copy function implementation
 
 2. Structural Patterns
 
@@ -51,7 +53,7 @@ These patterns deal with how objects interact and communicate with each other.
 	•	Memento: Allows an object to capture its internal state and restore it later without exposing the details of its implementation.
             Example: Saving the state of a game.
 	•	Observer: Defines a dependency between objects so that when one object changes state, all its dependents are notified.
-            Example: Event handling systems.
+            Example: Event handling systems
 	•	State: Allows an object to change its behavior when its internal state changes.
             Example: State machines, such as a vending machine.
 	•	Strategy: Defines a family of algorithms, encapsulates each one, and makes them interchangeable.
@@ -60,5 +62,12 @@ These patterns deal with how objects interact and communicate with each other.
             Example: A cooking recipe where specific steps are implemented by subclasses.
 	•	Visitor: Represents an operation to be performed on elements of an object structure without changing the classes of the elements.
             Example: Operations on a collection of different types of elements, like calculating taxes or applying discounts.
+	•	Null Object: Provides a default object that does nothing, avoiding null references.
 
+*/
+
+/*
+Proxy Pattern Example
+
+controller --(request)--> service --(request)--> repository
 */
