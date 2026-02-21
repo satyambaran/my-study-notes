@@ -34,6 +34,9 @@ Or use the provided script (starts deps + server in one step):
 ```bash
 chmod +x ./start.sh
 ./start.sh
+
+chmod +x ./stop.sh
+./stop.sh
 ```
 
 ### Environment Variables
@@ -53,6 +56,18 @@ The app reads from a `.env` file in the project root. The defaults work out of t
 curl -X POST http://localhost:3000/shorten \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/very/long/url"}'
+
+curl -X POST http://localhost:3000/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/very/long/url1"}'
+
+curl -X POST http://localhost:3000/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/very/long/url2"}'
+
+curl -X POST http://localhost:3000/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/very/long/url3"}'
 ```
 
 **Response:**
@@ -68,6 +83,15 @@ curl -X POST http://localhost:3000/shorten \
 curl -X POST http://localhost:3000/shorten \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/very/long/url", "requested_url": "my-alias"}'
+curl -X POST http://localhost:3000/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/very/long/url1", "requested_url": "my-alias"}'
+curl -X POST http://localhost:3000/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/very/long/url", "requested_url": "my-alias-1"}'
+curl -X POST http://localhost:3000/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/very/long/url", "requested_url": "my-alias-2"}'
 ```
 
 **Response:**
