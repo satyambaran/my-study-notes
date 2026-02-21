@@ -9,12 +9,13 @@ import (
     "log"
     "math/rand"
     "os"
-    "strconv"
     "time"
 
     "github.com/go-redis/redis/v8"
     "github.com/gofiber/fiber/v2"
     "github.com/gofiber/fiber/v2/middleware/logger"
+    "github.com/jackc/pgx/v5/pgconn"
+    "github.com/joho/godotenv"
     "gorm.io/driver/postgres"
     "gorm.io/gorm"
 )
@@ -22,13 +23,8 @@ import (
 const (
     initialLength = 6
     maxRetries    = 8
-    host          = "localhost"
-    port          = 5432
-    user          = "postgres"
-    password      = "password"
-    dbname        = "db"
     baseURL       = "http://localhost:3000/"
-    ttl           = 3 * 24 * 60 * 60
+    ttl = 3 * 24 * time.Hour
 )
 
 var ctx = context.Background()
@@ -46,8 +42,9 @@ type URLShortener struct {
 }
 
 func NewURLShortener() (*URLShortener, error) {
-    dbUrl := "host=" + host + " port=" + strconv.Itoa(port) + " user=" + user + " password=" + password + " dbname=" + dbname + " sslmode=disable"
+    dbUrl := os.Getenv("DB_URL")
     redisUrl := os.Getenv("REDIS_URL")
+
     db, err := gorm.Open(postgres.Open(dbUrl), &gorm.Config{})
     if err != nil {
         return nil, err
@@ -55,7 +52,8 @@ func NewURLShortener() (*URLShortener, error) {
     db.AutoMigrate(&URL{})
 
     cache := redis.NewClient(&redis.Options{
-        Addr: redisUrl,
+        Addr:     redisUrl,
+        Password: os.Getenv("REDIS_PASSWORD"),
     })
     SetEvictionPolicy(cache)
 
@@ -63,6 +61,7 @@ func NewURLShortener() (*URLShortener, error) {
 
     return &URLShortener{db: db, cache: cache, rng: rng}, nil
 }
+
 func SetEvictionPolicy(cache *redis.Client) {
     policy := "allkeys-lfu"
 
@@ -76,8 +75,18 @@ func SetEvictionPolicy(cache *redis.Client) {
     }
     fmt.Println("Current eviction policy:", currentPolicy)
 }
+
+// isDuplicateKeyError covers both gorm.ErrDuplicatedKey (not always populated by
+// the pgx driver) and the underlying PostgreSQL SQLSTATE 23505 directly.
+func isDuplicateKeyError(err error) bool {
+    if errors.Is(err, gorm.ErrDuplicatedKey) {
+        return true
+    }
+    var pgErr *pgconn.PgError
+    return errors.As(err, &pgErr) && pgErr.Code == "23505"
+}
+
 func (s *URLShortener) generateShortURL(url string, length int) string {
-    // hash := sha256.Sum256([]byte(url + time.Now().String()))
     hash := sha256.Sum256([]byte(url + string(rune(s.rng.Int63()))))
     return base64.URLEncoding.EncodeToString(hash[:length])
 }
@@ -86,10 +95,10 @@ func (s *URLShortener) Shorten(url, shortURL string) (string, error) {
     if shortURL != "" {
         newURL := URL{ShortURL: shortURL, OriginalURL: url}
         result := s.db.Create(&newURL)
-        if result.Error != nil && !errors.Is(result.Error, gorm.ErrDuplicatedKey) {
+        if result.Error != nil && !isDuplicateKeyError(result.Error) {
             return "", result.Error
         }
-        if result.Error != nil && errors.Is(result.Error, gorm.ErrDuplicatedKey) {
+        if result.Error != nil && isDuplicateKeyError(result.Error) {
             return "", errors.New("requested url is not available")
         }
         s.cache.Set(ctx, shortURL, url, ttl)
@@ -104,7 +113,7 @@ func (s *URLShortener) Shorten(url, shortURL string) (string, error) {
             s.cache.Set(ctx, shortURL, url, ttl)
             return baseURL + shortURL, nil
         }
-        if result.Error != nil && !errors.Is(result.Error, gorm.ErrDuplicatedKey) {
+        if result.Error != nil && !isDuplicateKeyError(result.Error) {
             return "", result.Error
         }
         if i == maxRetries-1 {
@@ -113,6 +122,7 @@ func (s *URLShortener) Shorten(url, shortURL string) (string, error) {
     }
     return "", errors.New("failed to generate a unique short URL after multiple attempts")
 }
+
 func (s *URLShortener) Resolve(shortURL string) (string, error) {
     originalURL, err := s.cache.Get(ctx, shortURL).Result()
     if err == nil {
@@ -132,6 +142,10 @@ func (s *URLShortener) Resolve(shortURL string) (string, error) {
 }
 
 func main() {
+    if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found, relying on environment variables")
+    }
+
     urlShortener, err := NewURLShortener()
     if err != nil {
         log.Fatal("Failed to connect to database:", err)
