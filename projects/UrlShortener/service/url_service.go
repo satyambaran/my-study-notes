@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	initialLength = 6
+	initialLength = 8
 	maxRetries    = 8
 	baseURL       = "http://localhost:3000/"
 	ttl           = 3 * 24 * time.Hour
@@ -58,12 +58,13 @@ func isDuplicateKeyError(err error) bool {
 
 func (s *urlService) generateShortURL(url string, length int) string {
 	hash := sha256.Sum256([]byte(url + string(rune(s.rng.Int63()))))
-	return base64.URLEncoding.EncodeToString(hash[:length])
+	encoded := base64.RawURLEncoding.EncodeToString(hash[:])
+	return encoded[:length]
 }
 
 func (s *urlService) Shorten(url, shortURL string) (string, error) {
 	if shortURL != "" {
-		err := s.repo.Create(&model.URL{ShortURL: shortURL, OriginalURL: url})
+		err := s.repo.Create(&model.URL{ShortURL: shortURL, OriginalURL: url, IsCustomAlias: true})
 		if isDuplicateKeyError(err) {
 			return "", errors.New("requested url is not available")
 		}
@@ -73,6 +74,14 @@ func (s *urlService) Shorten(url, shortURL string) (string, error) {
 		s.cache.Set(ctx, shortURL, url, ttl)
 		s.log.Info("URL shortened with custom alias", "short", shortURL, "original", url)
 		return baseURL + shortURL, nil
+	}
+
+	// Return the existing auto-generated short URL if the original URL was
+	// already registered without a custom alias.
+	if existing, err := s.repo.FindByOriginalURL(url); err == nil {
+		s.cache.Set(ctx, existing.ShortURL, url, ttl)
+		s.log.Info("URL already shortened, returning existing", "short", existing.ShortURL, "original", url)
+		return baseURL + existing.ShortURL, nil
 	}
 
 	length := initialLength
