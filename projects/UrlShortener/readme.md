@@ -129,3 +129,19 @@ docker ps -a
 docker kill redis
 docker kill db
 ```
+
+## Revamp
+
+What changed and why
+
+| File | Role | Notes |
+|------|------|-------|
+| `config/config.go` | Config struct | A single `Config` struct loaded once at startup from env. All other packages receive what they need via constructor args — no package reads env vars directly except `config`. |
+| `logger/logger.go` | Singleton `slog.Logger` | Uses `sync.Once` so the exact same `*slog.Logger` instance is returned no matter how many times `Get()` is called. Outputs structured JSON (good for log aggregation). Uses Go 1.21's built-in `log/slog` — no new dependency. |
+| `database/database.go` | Singleton GORM connection | `Connect(dsn)` uses `sync.Once` — GORM's `Open()` runs exactly once regardless of how many times `Connect` is called. `Get()` returns the shared `*gorm.DB`. `AutoMigrate` stays in `main.go` (it's a startup concern, not a DB concern). |
+| `cache/cache.go` | Singleton Redis connection | Same `sync.Once` pattern. `setEvictionPolicy` now uses the structured logger instead of `log.Fatal`, so a misconfigured eviction policy is a warning, not a crash. |
+| `model/url.go` | Data model | Pure data — just the GORM struct, no logic. |
+| `repository/url_repository.go` | Data access | Interface + concrete struct. Only speaks to the DB. No business logic. |
+| `service/url_service.go` | Business logic | All business logic lives here. Depends on `URLRepository` interface (not the concrete struct) — easy to test/mock. Logs key events (shorten, cache hit/miss). |
+| `controller/url_controller.go` | HTTP handler | Only parses HTTP request → calls service → writes HTTP response. Zero business logic. |
+| `main.go` | Thin entry point | Startup order: load env → load config → init logger → init DB singleton → init Redis singleton → wire repo → wire service → wire controller → start server. |
