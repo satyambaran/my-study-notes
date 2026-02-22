@@ -33,7 +33,9 @@ func Get() *redis.Client {
 }
 
 func setEvictionPolicy(log *slog.Logger) {
-	const policy = "allkeys-lfu"
+	// volatile-lfu evicts only keys that have a TTL set (the URL cache entries).
+	// The ID counter key has no TTL and is therefore never eligible for eviction.
+	const policy = "volatile-lfu"
 	if _, err := instance.ConfigSet(ctx, "maxmemory-policy", policy).Result(); err != nil {
 		log.Warn("failed to set Redis eviction policy", "error", err)
 		return
