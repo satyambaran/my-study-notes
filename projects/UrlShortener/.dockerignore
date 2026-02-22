@@ -1,0 +1,4 @@
+.env
+*.sh
+.DS_Store
+readme.md

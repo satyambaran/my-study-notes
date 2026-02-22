@@ -201,3 +201,91 @@ What changed and why
   ```
 
   RawURLEncoding never emits `=` padding. With initialLength = 8 the output is always exactly 8 clean chars (A-Z a-z 0-9 - _). When the length increments on collision, it grows by 1 char at a time (9, 10, …) instead of jumping from 8 to 12.
+
+## Moving towards making it scalable
+How the range allocation works
+
+|  Server A starts         |  Server B starts       |
+|--------------------------|------------------------|
+|    INCRBY counter 1000   |    INCRBY counter 1000 |
+|    ← gets 1000           |    ← gets 2000         |
+|    range: [1, 1000]      |    range: [1001, 2000] |
+
+INCRBY is atomic in Redis — two servers can never claim the same range. When a server exhausts its block it calls INCRBY again to get the next one. If a server
+  crashes with IDs left in its block, those IDs are simply skipped; there's no ambiguity.
+
+### Changes
+
+`service/url_service.go`:
+- Removed crypto/sha256, encoding/base64, math/rand, and the rng field — no longer needed.
+- Added sync.Mutex, currentID int64, rangeEnd int64 to the struct.
+- claimRange(): calls INCRBY shortener:id_counter 1000 → gets the top of the newly claimed block, sets [currentID, rangeEnd].
+- nextID(): mutex-protected; claims a new range from Redis whenever the current block is exhausted.
+- encode(n): base62 encoding — digits → lowercase → uppercase. encode(1) = "1", encode(62) = "10", encode(238327) = "zzz". No fixed width, naturally grows as the ID space fills up.
+- Shorten no-alias path: look up existing → if none, get a unique ID → encode → insert. No retry loop needed — uniqueness is guaranteed by the range allocation.
+
+`cache/cache.go`
+- Changed eviction policy from allkeys-lfu → volatile-lfu. With volatile-lfu, only keys with a TTL (the URL cache entries, set with 3 * 24h) are candidates for eviction. The shortener:id_counter key has no TTL and is therefore immune to eviction.
+
+`docker-compose.yml`
+- Added `--appendonly yes` to the Redis command. AOF (Append-Only File) writes every write operation to disk, so the counter value is durable across Redis container restarts. Without this, a Redis restart would reset the counter to 0 and IDs would repeat.
+`stop.sh`
+- Normal stop — Redis remembers everything (counter, cached URLs)
+  ```bash
+  ./stop.sh 
+  ```                                                                                     
+- One-time wipe — Redis starts from scratch on next ./start.sh  
+  ```bash                                                                          
+  ./stop.sh --fresh-redis  
+  ```                                                                                                               
+                                                                                                           
+## Implementing kubernetes
+### How to use it
+- First time (or after code changes)
+  ```bash
+  ./k8s/deploy.sh
+  ```
+- Check what's running
+  ```
+  ./k8s/status.sh
+  ```
+- Watch logs from all app pods at once
+  ```
+  ./k8s/logs.sh
+  ```
+- Manually set replica count (HPA will still auto-scale after)
+  ```
+  ./k8s/scale.sh 5
+  ```
+- Stop pods but keep data on disk
+  ```
+  ./k8s/stop.sh
+  ```
+- Delete everything including database data
+  ```
+  ./k8s/stop.sh --wipe
+  ```
+- Stop the Minikube VM entirely (frees all RAM/CPU)
+  ```
+  ./k8s/stop.sh --minikube
+  ```
+
+  ---
+### Manifests (applied in numbered order):
+
+- HPA (autoscaler): watches average CPU across all app pods. If it exceeds 50% of the requested 100m (i.e. each pod averages >50m CPU), Kubernetes spawns more pods — up to 10. It also scales back down when load drops. `deploy.sh` enables metrics-server which is the Minikube addon that feeds real CPU metrics to the HPA.
+
+- BASE_URL fix: deploy.sh computes http://<minikube-ip>:30300/ after the service is created and patches it into the deployment with kubectl set env. This triggers a zero-downtime rolling restart so all pods serve correct short URLs.
+
+- `service/url_service.go`: baseURL is now read from config using $BASE_URL env var, falling back to localhost:3000/ for local Docker Compose dev
+
+- Kuberenetes yml files
+  |          File          |                       What it creates                        |
+  |------------------------|--------------------------------------------------------------|
+  | 00-namespace.yaml      | An isolated urlshortener namespace — all resources live here |
+  | 01-secret.yaml         | Passwords and the DB connection string (never in app code)   |
+  | 02-postgres.yaml       | PVC (1 GiB disk) + Deployment + ClusterIP Service            |
+  | 03-redis.yaml          | PVC (256 MiB disk) + Deployment + ClusterIP Service          |
+  | 04-redis-init-job.yaml | One-shot Job: SET shortener:id_counter 1000000 NX            |
+  | 05-app.yaml            | Deployment (2 → 10 pods) + NodePort Service on :30300 + HPA  |
+

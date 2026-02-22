@@ -1,0 +1,24 @@
+# Job runs once: seeds the ID counter in Redis to 1,000,000 (SET NX = only if absent).
+# The app's deploy.sh deletes and re-creates this Job on every deploy so it always runs,
+# but SET NX makes the operation idempotent — it won't reset a counter that already exists.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-init
+  namespace: urlshortener
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: redis-init
+          image: redis:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - "redis-cli -h redis-service -a $REDIS_PASSWORD SET shortener:id_counter 1000000 NX"
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: urlshortener-secrets
+                  key: REDIS_PASSWORD
