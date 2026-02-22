@@ -9,13 +9,23 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/satyambaran/UrlShortener/config"
 	"github.com/satyambaran/UrlShortener/model"
 	"github.com/satyambaran/UrlShortener/repository"
 	"gorm.io/gorm"
 )
 
+// baseURL is read from BASE_URL env var so it can be set correctly in each
+// environment (localhost for local dev, minikube IP:port for Kubernetes, etc.).
+var baseURL = func() string {
+	cfg := config.Load()
+	if u := cfg.BASEURL; u != "" {
+		return u
+	}
+	return "http://localhost:3000/"
+}()
+
 const (
-	baseURL    = "http://localhost:3000/"
 	ttl        = 3 * 24 * time.Hour
 	blockSize  = 1000
 	counterKey = "shortener:id_counter"
