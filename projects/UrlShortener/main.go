@@ -6,14 +6,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 	fibLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
-	"github.com/satyambaran/UrlShortener/cache"
-	"github.com/satyambaran/UrlShortener/config"
-	"github.com/satyambaran/UrlShortener/controller"
-	"github.com/satyambaran/UrlShortener/database"
-	appLogger "github.com/satyambaran/UrlShortener/logger"
-	"github.com/satyambaran/UrlShortener/model"
-	"github.com/satyambaran/UrlShortener/repository"
-	"github.com/satyambaran/UrlShortener/service"
+	"github.com/satyambaran/UrlShortener/src/cache"
+	"github.com/satyambaran/UrlShortener/src/config"
+	"github.com/satyambaran/UrlShortener/src/controller"
+	"github.com/satyambaran/UrlShortener/src/database"
+	appLogger "github.com/satyambaran/UrlShortener/src/logger"
+	"github.com/satyambaran/UrlShortener/src/model"
+	"github.com/satyambaran/UrlShortener/src/repository"
+	"github.com/satyambaran/UrlShortener/src/service"
 )
 
 func main() {
