@@ -1,0 +1,82 @@
+# ============================================================
+#  NAMESPACE
+# ============================================================
+# A Namespace is a virtual cluster inside a real cluster.
+# It provides:
+#   - Isolation between teams / environments (dev, staging, prod)
+#   - Scoped RBAC (role-based access control)
+#   - Scoped ResourceQuotas and LimitRanges
+#   - DNS sub-domain: <service>.<namespace>.svc.cluster.local
+#
+# Built-in namespaces:
+#   default       — where objects land when no namespace is specified
+#   kube-system   — control plane components (api-server, etcd, scheduler…)
+#   kube-public   — readable by all, rarely used
+#   kube-node-lease — node heartbeat leases (improves node health detection)
+# ============================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-demo
+  labels:
+    # Labels are key-value pairs attached to any object.
+    # Used by selectors, NetworkPolicies, and operators.
+    project: k8s-java-demo
+    managed-by: kubectl
+
+---
+# ============================================================
+#  RESOURCE QUOTA  (scoped to the namespace)
+# ============================================================
+# ResourceQuota caps total resource consumption inside a namespace.
+# The scheduler will refuse new pods that would exceed the quota.
+# ============================================================
+
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: demo-quota
+  namespace: k8s-demo
+spec:
+  hard:
+    # Workload limits
+    pods:                   "20"
+    deployments.apps:       "10"
+    services:               "10"
+    persistentvolumeclaims: "5"
+
+    # Compute limits across ALL pods in this namespace
+    requests.cpu:    "2"
+    requests.memory: "2Gi"
+    limits.cpu:      "4"
+    limits.memory:   "4Gi"
+
+---
+# ============================================================
+#  LIMIT RANGE  (default resource limits for containers)
+# ============================================================
+# LimitRange sets per-container defaults so you don't have to
+# specify resources on every single pod spec.
+# ============================================================
+
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: demo-limit-range
+  namespace: k8s-demo
+spec:
+  limits:
+    - type: Container
+      default:            # applied if container has no 'limits' section
+        cpu:    "500m"
+        memory: "512Mi"
+      defaultRequest:     # applied if container has no 'requests' section
+        cpu:    "100m"
+        memory: "128Mi"
+      max:                # container cannot request more than this
+        cpu:    "2"
+        memory: "2Gi"
+      min:                # container cannot request less than this
+        cpu:    "50m"
+        memory: "64Mi"

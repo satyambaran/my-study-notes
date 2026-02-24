@@ -1,0 +1,107 @@
+# ============================================================
+#  RBAC — Role-Based Access Control
+# ============================================================
+# RBAC controls WHO can do WHAT to WHICH resources.
+#
+# Objects:
+#   Role          — permissions within a single namespace
+#   ClusterRole   — permissions cluster-wide (or reusable across namespaces)
+#   RoleBinding   — binds a Role/ClusterRole to subjects IN a namespace
+#   ClusterRoleBinding — binds a ClusterRole to subjects cluster-wide
+#
+# Subjects (who):
+#   User          — human user (managed externally, e.g., OIDC, certs)
+#   Group         — group of users
+#   ServiceAccount — identity for pods/processes running IN the cluster
+#
+# Verbs (what): get, list, watch, create, update, patch, delete, deletecollection
+# Resources (which): pods, deployments, services, secrets, configmaps, etc.
+# ============================================================
+
+# ── ServiceAccount for our app ─────────────────────────────────
+# Pods run as this SA and inherit its permissions.
+# Default SA has no permissions beyond reading its own secrets.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: demo-service-account
+  namespace: k8s-demo
+  labels:
+    app: k8s-demo
+automountServiceAccountToken: false   # Security: don't auto-mount token
+
+---
+# ── Role — namespace-scoped permissions ────────────────────────
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: demo-pod-reader
+  namespace: k8s-demo
+rules:
+  # Allow reading pods and their logs (useful for monitoring sidecars)
+  - apiGroups: [""]          # "" = core API group (pods, services, secrets, etc.)
+    resources: ["pods", "pods/log"]
+    verbs:     ["get", "list", "watch"]
+
+  # Allow reading ConfigMaps
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs:     ["get", "list"]
+
+---
+# ── RoleBinding — attach Role to ServiceAccount ───────────────
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: demo-pod-reader-binding
+  namespace: k8s-demo
+subjects:
+  - kind:      ServiceAccount
+    name:      demo-service-account
+    namespace: k8s-demo
+
+  # Also bind to a specific user
+  # - kind: User
+  #   name: jane.doe@company.com
+  #   apiGroup: rbac.authorization.k8s.io
+
+roleRef:
+  kind:     Role
+  name:     demo-pod-reader
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# ── ClusterRole — read all pods cluster-wide ──────────────────
+# Useful for monitoring tools (Prometheus, Datadog) that need
+# to discover pods across all namespaces.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: demo-cluster-pod-reader
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "nodes", "namespaces", "services", "endpoints"]
+    verbs:     ["get", "list", "watch"]
+
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs:     ["get", "list", "watch"]
+
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods", "nodes"]
+    verbs:     ["get", "list"]
+
+---
+# ── ClusterRoleBinding ────────────────────────────────────────
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: demo-cluster-pod-reader-binding
+subjects:
+  - kind:      ServiceAccount
+    name:      demo-service-account
+    namespace: k8s-demo
+roleRef:
+  kind:     ClusterRole
+  name:     demo-cluster-pod-reader
+  apiGroup: rbac.authorization.k8s.io

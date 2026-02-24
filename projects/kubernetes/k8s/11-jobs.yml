@@ -1,0 +1,130 @@
+# ============================================================
+#  JOB  &  CRON JOB
+# ============================================================
+# Job: runs a task to COMPLETION (not continuously like a Deployment).
+#   - Creates one or more pods, retries on failure.
+#   - Guarantees at-least-once execution.
+#   - Use for: DB migrations, batch processing, report generation.
+#
+# CronJob: schedules Jobs on a cron expression.
+#   - Use for: backups, cleanup tasks, scheduled reports.
+#   - Cron syntax: "minute hour day-of-month month day-of-week"
+#     "0 2 * * *" = every day at 2 AM
+#     "*/5 * * * *" = every 5 minutes
+# ============================================================
+
+# ── One-off Job ──────────────────────────────────────────────
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: demo-db-migration
+  namespace: k8s-demo
+  labels:
+    app: k8s-demo
+    type: migration
+spec:
+  # Number of successful completions required
+  completions: 1
+
+  # How many pods can run in parallel
+  parallelism: 1
+
+  # Retry up to 3 times on failure
+  backoffLimit: 3
+
+  # Delete job and pods after 300s (cleanup)
+  ttlSecondsAfterFinished: 300
+
+  template:
+    metadata:
+      labels:
+        app: k8s-demo
+        type: migration
+    spec:
+      # Jobs MUST have restartPolicy Never or OnFailure (not Always)
+      restartPolicy: OnFailure
+
+      containers:
+        - name: migration
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "=== Running DB Migration at $(date) ==="
+              echo "Step 1: Connecting to database..."
+              sleep 2
+              echo "Step 2: Applying schema changes..."
+              sleep 2
+              echo "Step 3: Seeding initial data..."
+              sleep 1
+              echo "=== Migration completed successfully ==="
+
+          resources:
+            requests:
+              cpu:    "50m"
+              memory: "64Mi"
+            limits:
+              cpu:    "200m"
+              memory: "128Mi"
+
+---
+# ── CronJob ──────────────────────────────────────────────────
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: demo-cleanup
+  namespace: k8s-demo
+  labels:
+    app: k8s-demo
+    type: scheduled
+spec:
+  # Run every 5 minutes (change to "0 0 * * *" for daily midnight)
+  schedule: "*/5 * * * *"
+
+  # Timezone (Kubernetes 1.25+)
+  timeZone: "Asia/Kolkata"
+
+  # What to do if a job is still running when the next schedule fires:
+  #   Allow       — run both concurrently
+  #   Forbid      — skip new job if previous still running
+  #   Replace     — kill old job, start new one
+  concurrencyPolicy: Forbid
+
+  # Keep last 3 successful / 1 failed job records for debugging
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit:     1
+
+  # If CronJob misses its scheduled time by more than this, skip it
+  startingDeadlineSeconds: 60
+
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 600
+      template:
+        metadata:
+          labels:
+            app: k8s-demo
+            type: scheduled
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: cleanup
+              image: busybox:1.36
+              command:
+                - sh
+                - -c
+                - |
+                  echo "=== Cleanup job started at $(date) ==="
+                  echo "Cleaning up temp files older than 7 days..."
+                  # find /data -name "*.tmp" -mtime +7 -delete
+                  echo "Cleanup complete!"
+
+              resources:
+                requests:
+                  cpu:    "50m"
+                  memory: "32Mi"
+                limits:
+                  cpu:    "100m"
+                  memory: "64Mi"

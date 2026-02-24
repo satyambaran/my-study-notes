@@ -1,0 +1,90 @@
+# ============================================================
+#  NETWORK POLICY
+# ============================================================
+# NetworkPolicy is a firewall for pod-to-pod communication.
+# By default, ALL pods can talk to ALL pods (flat network).
+#
+# NetworkPolicy rules are ADDITIVE (OR logic):
+#   - If no NetworkPolicy selects a pod → all traffic allowed
+#   - Once a NetworkPolicy selects a pod → only allowed traffic passes
+#
+# Requires a CNI plugin that supports NetworkPolicy:
+#   Calico, Cilium, Weave Net (NOT Flannel by default)
+#
+# Minikube: Use --cni=calico or install Calico after start
+# ============================================================
+
+# ── Default deny ALL ingress in namespace ─────────────────────
+# Best practice: start with deny-all, then explicitly allow.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: k8s-demo
+spec:
+  podSelector: {}       # Selects ALL pods in namespace
+  policyTypes:
+    - Ingress           # Apply to incoming traffic
+  # No ingress rules = deny all ingress
+
+---
+# ── Allow ingress to demo app from ingress controller ─────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-demo
+  namespace: k8s-demo
+spec:
+  podSelector:
+    matchLabels:
+      app: k8s-demo           # Applies to our demo pods
+
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow from ingress-nginx pods (in the ingress-nginx namespace)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+
+    # Allow from pods within the same namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: k8s-demo
+      ports:
+        - protocol: TCP
+          port: 8080
+
+  egress:
+    # Allow DNS (kube-dns) — required for service discovery
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+    # Allow outbound to internet (for external API calls)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8        # Block access to internal subnets
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443              # HTTPS only

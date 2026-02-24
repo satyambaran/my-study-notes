@@ -1,0 +1,49 @@
+# ============================================================
+#  CONFIG MAP
+# ============================================================
+# ConfigMap decouples configuration from the container image.
+# Changes to ConfigMap values can be rolled out without
+# rebuilding the Docker image.
+#
+# Two ways to consume a ConfigMap:
+#   1. As environment variables  (what we show in deployment.yml)
+#   2. As mounted files          (shown in the volumeMounts section)
+#
+# ConfigMaps are NOT encrypted — use Secrets for sensitive data.
+# ============================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-config
+  namespace: k8s-demo
+  labels:
+    app: k8s-demo
+data:
+  # ── Flat key-value pairs consumed as environment variables ──
+  APP_GREETING: "Hello from Kubernetes! This came from a ConfigMap."
+  APP_VERSION:  "1.0.0"
+  APP_ENV:      "production"
+
+  # ── Multi-line value consumed as a mounted config file ──────
+  # Mounted at /config/app.properties inside the container
+  app.properties: |
+    # Application runtime configuration
+    app.greeting=Hello from ConfigMap file!
+    app.version=1.0.0
+    app.environment=production
+    app.max-retries=3
+    app.timeout-seconds=30
+
+  # ── Nginx-style config example ───────────────────────────────
+  # Imagine this was a sidecar nginx config
+  nginx.conf: |
+    server {
+        listen 80;
+        location /health {
+            return 200 'OK';
+        }
+        location / {
+            proxy_pass http://localhost:8080;
+        }
+    }
