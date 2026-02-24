@@ -41,15 +41,15 @@ services:
         restart: "no"
 
     app:
-        build: .
+        build: . # Use the Dockerfile in the current directory to build the image for the app service.
         container_name: app
         ports:
             - "3000:3000"
         environment:
             # Inside the compose network, services are reached by their service name.
             # These override whatever is in the .env file (which uses localhost for local dev).
-            - DB_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-            - REDIS_URL=redis:6379
+            - DB_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB} # Here we use `db` not localhost because the app will connect to the database service within the Docker network.
+            - REDIS_URL=redis:6379 # Similarly, we use `redis` to connect to the Redis service within the Docker network.
             - REDIS_PASSWORD=${REDIS_PASSWORD}
         depends_on:
             db:
