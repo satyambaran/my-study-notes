@@ -1,0 +1,70 @@
+# PersistentVolumeClaim — stores Redis AOF file so the ID counter survives restarts.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: urlshortener
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 256Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: urlshortener
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:latest
+          # Using a shell so $REDIS_PASSWORD is expanded at runtime.
+          command: ["/bin/sh", "-c"]
+          args: ["redis-server --requirepass $REDIS_PASSWORD --appendonly yes"]
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: urlshortener-secrets
+                  key: REDIS_PASSWORD
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          readinessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
+      volumes:
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: redis-pvc
+
+---
+# ClusterIP service — the app connects via "redis-service:6379".
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: urlshortener
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
