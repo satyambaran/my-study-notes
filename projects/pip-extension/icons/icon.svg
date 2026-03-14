@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Background rounded rect -->
+  <rect width="128" height="128" rx="24" fill="#1a1a2e"/>
+  <!-- Main screen outline -->
+  <rect x="10" y="28" width="108" height="72" rx="8" fill="none" stroke="#e94560" stroke-width="7"/>
+  <!-- PiP small window (bottom-right) -->
+  <rect x="68" y="68" width="44" height="28" rx="5" fill="#e94560"/>
+  <!-- Play triangle in PiP window -->
+  <polygon points="82,82 98,76 98,88" fill="#1a1a2e"/>
+</svg>

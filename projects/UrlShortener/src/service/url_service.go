@@ -9,11 +9,19 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/satyambaran/UrlShortener/config"
-	"github.com/satyambaran/UrlShortener/model"
-	"github.com/satyambaran/UrlShortener/repository"
+	"github.com/satyambaran/UrlShortener/src/config"
+	"github.com/satyambaran/UrlShortener/src/model"
+	"github.com/satyambaran/UrlShortener/src/repository"
 	"gorm.io/gorm"
 )
+
+// CacheClient is the subset of *redis.Client that the service uses.
+// Defining it as an interface makes the service testable without a real Redis server.
+type CacheClient interface {
+	Get(ctx context.Context, key string) *redis.StringCmd
+	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+	IncrBy(ctx context.Context, key string, value int64) *redis.IntCmd
+}
 
 // baseURL is read from BASE_URL env var so it can be set correctly in each
 // environment (localhost for local dev, minikube IP:port for Kubernetes, etc.).
@@ -44,14 +52,14 @@ type URLService interface {
 
 type urlService struct {
 	repo      repository.URLRepository
-	cache     *redis.Client
+	cache     CacheClient
 	log       *slog.Logger
 	mu        sync.Mutex
 	currentID int64
 	rangeEnd  int64
 }
 
-func NewURLService(repo repository.URLRepository, cache *redis.Client, log *slog.Logger) URLService {
+func NewURLService(repo repository.URLRepository, cache CacheClient, log *slog.Logger) URLService {
 	return &urlService{
 		repo:      repo,
 		cache:     cache,

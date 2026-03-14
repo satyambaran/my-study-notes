@@ -2,7 +2,7 @@ package controller
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/satyambaran/UrlShortener/service"
+	"github.com/satyambaran/UrlShortener/src/service"
 )
 
 type URLController struct {
