@@ -1,0 +1,102 @@
+# ============================================================
+#  STATEFUL SET
+# ============================================================
+# StatefulSet is for stateful workloads that need:
+#   - Stable, unique pod names: demo-0, demo-1, demo-2
+#   - Stable network identity (DNS):
+#       demo-0.demo-headless.k8s-demo.svc.cluster.local
+#   - Ordered deployment and scaling (0→1→2 startup, 2→1→0 shutdown)
+#   - Per-pod PersistentVolumes via volumeClaimTemplates
+#
+# Use cases: databases (MySQL, Postgres, MongoDB, Cassandra),
+#            distributed systems (Kafka, ZooKeeper, Elasticsearch),
+#            anything that needs a stable identity.
+#
+# Key difference from Deployment:
+#   Deployment: pods are interchangeable, same PVC shared (or no PVC)
+#   StatefulSet: each pod gets its OWN PVC, unique identity, ordered ops
+# ============================================================
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: k8s-demo-stateful
+  namespace: k8s-demo
+  labels:
+    app: k8s-demo-stateful
+spec:
+  serviceName: "demo-headless"   # Must match the Headless Service name
+  replicas: 3
+  selector:
+    matchLabels:
+      app: k8s-demo-stateful
+
+  # Ordered rolling update (update pod-2 first, then pod-1, then pod-0)
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0              # Only update pods with ordinal >= partition
+
+  template:
+    metadata:
+      labels:
+        app: k8s-demo-stateful
+    spec:
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: k8s-demo-stateful
+          image: k8s-demo:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+
+          volumeMounts:
+            # Each pod gets its own /data volume — demo-0 gets demo-data-0
+            - name: demo-data
+              mountPath: /data
+
+          resources:
+            requests:
+              cpu:    "100m"
+              memory: "128Mi"
+            limits:
+              cpu:    "250m"
+              memory: "256Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+
+  # ── volumeClaimTemplates ─────────────────────────────────────
+  # Creates a NEW PVC for EACH pod:
+  #   demo-data-k8s-demo-stateful-0
+  #   demo-data-k8s-demo-stateful-1
+  #   demo-data-k8s-demo-stateful-2
+  # These PVCs persist even if the pod is deleted — data survives.
+  volumeClaimTemplates:
+    - metadata:
+        name: demo-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: manual
+        resources:
+          requests:
+            storage: 256Mi

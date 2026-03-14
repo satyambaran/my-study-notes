@@ -1,0 +1,85 @@
+# ============================================================
+#  INGRESS
+# ============================================================
+# Ingress manages HTTP/HTTPS routing from outside the cluster
+# to Services inside the cluster.
+#
+# Unlike NodePort/LoadBalancer (L4), Ingress works at L7 (HTTP):
+#   - Host-based routing:  api.example.com → api-service
+#   - Path-based routing:  example.com/app → app-service
+#   - TLS termination
+#   - Rate limiting, auth (via annotations)
+#
+# Requires an Ingress Controller installed in the cluster:
+#   - nginx-ingress (most popular, self-hosted)
+#   - Traefik
+#   - AWS ALB Ingress Controller
+#   - GCE Ingress Controller (GKE)
+#   - Istio Gateway (service mesh)
+#
+# Minikube: minikube addons enable ingress
+# Kind:     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/...
+# ============================================================
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-ingress
+  namespace: k8s-demo
+  annotations:
+    # Ingress controller class
+    kubernetes.io/ingress.class: "nginx"
+
+    # Rewrite the path before forwarding to backend
+    # /api/hello → /hello (strips the /api prefix)
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+
+    # Rate limiting — 10 req/s per IP
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+
+    # Enable CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+
+    # Redirect HTTP to HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+spec:
+  # TLS — references a Secret with tls.crt and tls.key
+  # tls:
+  #   - hosts:
+  #       - demo.example.com
+  #     secretName: demo-tls
+
+  rules:
+    # ── Host-based routing ────────────────────────────────────
+    - host: demo.example.com    # Replace with your domain (or use /etc/hosts for local)
+      http:
+        paths:
+          # Path-based routing
+          - path: /api(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: demo-service
+                port:
+                  number: 80
+
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: demo-service
+                port:
+                  number: 80
+
+    # ── Default backend (no host match) ──────────────────────
+    # Handles requests that don't match any rule above
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: demo-service
+                port:
+                  number: 80

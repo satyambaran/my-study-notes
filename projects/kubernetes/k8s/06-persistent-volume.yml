@@ -1,0 +1,94 @@
+# ============================================================
+#  PERSISTENT VOLUME (PV)  &  PERSISTENT VOLUME CLAIM (PVC)
+# ============================================================
+# The storage model has two layers:
+#
+#   PersistentVolume (PV)   — cluster resource, like a node.
+#                             Provisioned by an admin (or dynamically).
+#                             Has a lifecycle independent of pods.
+#
+#   PersistentVolumeClaim (PVC) — request for storage by a user.
+#                             Like a pod requesting CPU/memory from a node,
+#                             a PVC requests storage from a PV.
+#
+# Binding: Kubernetes matches PVCs to PVs by access mode + storage class + size.
+#
+# Access Modes:
+#   ReadWriteOnce (RWO)  — mounted by a single node (most block storage)
+#   ReadOnlyMany  (ROX)  — mounted read-only by many nodes
+#   ReadWriteMany (RWX)  — mounted read-write by many nodes (NFS, EFS)
+#   ReadWriteOncePod (RWOP) — single pod only (Kubernetes 1.22+)
+#
+# Reclaim Policies:
+#   Retain   — PV kept after PVC deletion, must be manually reclaimed
+#   Delete   — PV and underlying storage deleted with PVC (cloud default)
+#   Recycle  — deprecated, use dynamic provisioning instead
+#
+# Storage Classes:
+#   Define the "type" of storage (SSD, HDD, NFS).
+#   Dynamic provisioning: PVC → StorageClass → auto-create PV.
+# ============================================================
+
+# ── Static PV (manually created by admin) ────────────────────
+# In production you'd use dynamic provisioning via StorageClass.
+# hostPath is only for local/Minikube testing — data lives on the node.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: demo-pv
+  labels:
+    type: local
+    app: k8s-demo
+spec:
+  storageClassName: manual   # Custom name — PVC must match this
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  reclaimPolicy: Retain
+
+  # hostPath: stores data on the Kubernetes node's filesystem.
+  # Only use for local clusters (Minikube, Kind). NOT for production.
+  # Production alternatives:
+  #   - AWS:   awsElasticBlockStore / EFS (via EFS CSI driver)
+  #   - GCP:   gcePersistentDisk / Filestore
+  #   - Azure: azureDisk / azureFile
+  #   - Self-hosted: NFS, Ceph/Rook, Longhorn, OpenEBS
+  hostPath:
+    path: /tmp/k8s-demo-data
+    type: DirectoryOrCreate
+
+---
+# ── PersistentVolumeClaim — request from namespace ───────────
+# The Deployment mounts this via volumes.persistentVolumeClaim.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: demo-pvc
+  namespace: k8s-demo
+  labels:
+    app: k8s-demo
+spec:
+  storageClassName: manual   # Must match PV storageClassName
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 512Mi         # Request 512Mi from the 1Gi PV
+
+---
+# ── StorageClass example (dynamic provisioning) ──────────────
+# With a StorageClass, you skip the manual PV step.
+# The cloud provider's CSI driver auto-provisions the PV.
+#
+# apiVersion: storage.k8s.io/v1
+# kind: StorageClass
+# metadata:
+#   name: fast-ssd
+# provisioner: kubernetes.io/aws-ebs   # or ebs.csi.aws.com
+# parameters:
+#   type: gp3
+#   encrypted: "true"
+# reclaimPolicy: Delete
+# allowVolumeExpansion: true
+# volumeBindingMode: WaitForFirstConsumer  # delay binding until pod is scheduled
