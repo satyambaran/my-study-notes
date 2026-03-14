@@ -3,7 +3,7 @@ package repository
 import (
 	"errors"
 
-	"github.com/satyambaran/UrlShortener/model"
+	"github.com/satyambaran/UrlShortener/src/model"
 	"gorm.io/gorm"
 )
 
