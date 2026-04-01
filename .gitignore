@@ -1,2 +1,10 @@
 **/__MACOSX/**
 **/rust/**/target/**
+**/out/**/*.class
+**/out/**/*.log
+**/out/**/*.tmp
+**/out/**/*.bak
+**/out/**/*.swp
+**/out/**/*.swo
+**/out/**/*.DS_Store
+**/out/**/*.idea/

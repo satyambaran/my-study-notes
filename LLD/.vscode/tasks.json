@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "compile-java",
+            "type": "shell",
+            "command": "find src -name '*.java' | xargs javac -d out",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            }
+        }
+    ]
+}

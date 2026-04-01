@@ -1,0 +1,14 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "java",
+			"request": "launch",
+			"name": "Debug Java File",
+			"mainClass": "${file}",
+			"classPaths": ["${workspaceFolder}/out"],
+			"sourcePaths": ["${workspaceFolder}/src/main/java"],
+			"preLaunchTask": "compile-java"
+		}
+	]
+}

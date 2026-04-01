@@ -35,7 +35,7 @@ https://github.com/ashishps1/awesome-low-level-design?tab=readme-ov-file
 				2-directional: 
 					https://leetcode.com/problems/candy/submissions/1462619749/
 			* Top-Down with Memoization (similar to recursion)
-				Recursively break it down to smaller subproblems and store the results to use it later whenver it's required again
+				Recursively break it down to smaller subproblems and store the results to use it later whenever it's required again
 				~ Definitely solves the smaller problems first, but it's WHILE solving the bigger problems
 				Avoid redundant repeatative calculations using Memoization
 				e.g. Fibonacci numbers, Climbing Stairs, 0/1 Knapsack
