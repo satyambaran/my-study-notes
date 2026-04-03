@@ -1,11 +1,73 @@
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
 
 public class leetcode {
     public static void main(String[] args) {
 
+    }
+
+    public class TreeNode {
+        int val;
+        TreeNode left;
+        TreeNode right;
+
+        TreeNode() {
+        }
+
+        TreeNode(int val) {
+            this.val = val;
+        }
+
+        TreeNode(int val, TreeNode left, TreeNode right) {
+            this.val = val;
+            this.left = left;
+            this.right = right;
+        }
+    }
+
+    class Solution {
+        private Map<String, List<TreeNode>> mp = new HashMap();
+
+        private List<TreeNode> func(int l, int r) {
+            if (l > r)
+                return Collections.singletonList(null);
+            if (l == r)
+                return List.of(new TreeNode(l));
+
+            StringBuilder sb = new StringBuilder();
+            sb.append(l).append('-').append(r);
+            String key = sb.toString();
+            if (mp.containsKey(key)) {
+                return mp.get(key);
+            }
+
+            for (int i = l; i <= r; i++) {
+                List<TreeNode> left = func(l, i - 1);
+                List<TreeNode> right = func(i + 1, r);
+                for (TreeNode ln : left) {
+                    for (TreeNode rn : right) {
+                        TreeNode node = new TreeNode(i);
+                        node.left = ln;
+                        node.right = rn;
+                        mp.computeIfAbsent(key, k -> new ArrayList()).add(node);
+                    }
+                }
+            }
+            return mp.get(key);
+        }
+
+        public List<TreeNode> generateTrees(int n) {
+            return func(1, n);
+            // StringBuilder sb = new StringBuilder();
+            // sb.append(1).append('-').append(n);
+            // return mp.get(sb.toString());
+        }
     }
 
     public long getRangeSum(long[] prefixSum, int start, int end) {
@@ -77,8 +139,8 @@ public class leetcode {
         for (int i = 0; i < 4; i++) {
             int nx = x + dx[i];
             int ny = y + dy[i];
-            if (nx >= 0 && ny >= 0 && nx < n && ny < m && matrix[nx][ny] > matrix[x][y] && (dis[nx][ny] == 0
-                    || dis[nx][ny] < 1 + dis[x][y])) {
+            if (nx >= 0 && ny >= 0 && nx < n && ny < m && matrix[nx][ny] > matrix[x][y]
+                    && (dis[nx][ny] == 0 || dis[nx][ny] < 1 + dis[x][y])) {
                 ans = Math.max(ans, 1 + dfs(nx, ny, matrix, dis));
             }
         }

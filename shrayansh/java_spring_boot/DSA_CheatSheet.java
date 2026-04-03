@@ -161,6 +161,8 @@ public class DSA_CheatSheet {
         // ARRAYLIST (dynamic array, like vector<int>)
         // ─────────────────────────────────────────────
         List<Integer> list = new ArrayList<>();
+        List.of(null) //throws NPE: List.of doesn't allow null elements — use 
+        Collections.singletonList(null);// instead
         list.add(1); // append
         list.add(0, 99); // insert at index
         list.get(0); // access
