@@ -1,5 +1,6 @@
 **/__MACOSX/**
 **/rust/**/target/**
+**/*.class
 **/out/**/*.class
 **/out/**/*.log
 **/out/**/*.tmp
@@ -7,4 +8,5 @@
 **/out/**/*.swp
 **/out/**/*.swo
 **/out/**/*.DS_Store
+**/*.DS_Store
 **/out/**/*.idea/

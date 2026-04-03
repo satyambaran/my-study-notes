@@ -17,16 +17,11 @@ public class Scoreboard implements Observer {
     }
 
     @Override
-    public void notify(Object object) {
-        if (object instanceof Game) {
-            Game game = (Game) object;
-            if (game.getStatus() == GameStatus.WINNER) {
-                Player winner = game.getWinner();
-                logger.info("Scoreboard updated: " + winner.getName() + " wins!");
-                recordWin(winner);
-            }
-        } else {
-            logger.warning("Received notification from unknown source.");
+    public void notify(Game game) {
+        if (game.getStatus() == GameStatus.WINNER) {
+            Player winner = game.getWinner();
+            logger.info("Scoreboard updated: " + winner.getName() + " wins!");
+            playerScores.merge(winner.getName(), 1, Integer::sum);
         }
     }
 
@@ -48,5 +43,4 @@ public class Scoreboard implements Observer {
         sb.append("======================");
         logger.info(sb.toString());
     }
-
 }

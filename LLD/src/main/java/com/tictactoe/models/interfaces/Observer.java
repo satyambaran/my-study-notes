@@ -1,5 +1,7 @@
 package com.tictactoe.models.interfaces;
 
+import com.tictactoe.models.entities.Game;
+
 public interface Observer {
-    void notify(Object object);
+    void notify(Game game);
 }

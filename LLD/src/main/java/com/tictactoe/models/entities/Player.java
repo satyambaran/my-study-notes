@@ -1,7 +1,7 @@
 package com.tictactoe.models.entities;
 
 public class Player {
-    private String name;
+    private final String name;
 
     public Player(String name) {
         this.name = name;
@@ -9,9 +9,5 @@ public class Player {
 
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 }

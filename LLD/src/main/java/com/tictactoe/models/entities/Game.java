@@ -11,29 +11,27 @@ import com.tictactoe.models.interfaces.*;
 
 public class Game {
     private static int idCounter = 1;
+    private final int id;
     private final Board board;
-    private final Player[] players;
-    private final Symbol[] symbols;
-    private int currentPlayerIndex;
-
-    private GameStatus status;
+    private final List<Player> players;
+    private final List<Symbol> symbols;
+    private int currentPlayerIndex = 0;
+    private GameStatus status = GameStatus.IN_PROGRESS;
     private Player winner;
-
     private final List<Move> moves;
     private final List<WinningStrategy> winningStrategies;
     private final List<Observer> observers;
-    private final int id;
 
-    public Game(int boardSize, Player player1, Player player2) {
+    private static final Symbol[] PLAYER_SYMBOLS = { Symbol.X, Symbol.O };
+
+    public Game(int boardSize) {
         this.id = idCounter++;
         this.board = new Board(boardSize);
-        this.players = new Player[] { player1, player2 };
-        this.symbols = new Symbol[] { Symbol.X, Symbol.O };
-        this.currentPlayerIndex = 0;
-        this.status = GameStatus.IN_PROGRESS;
+        this.players = new ArrayList<>();
+        this.symbols = new ArrayList<>();
+        this.moves = new ArrayList<>();
         this.winningStrategies = initWinningStrategies();
         this.observers = new CopyOnWriteArrayList<>();
-        this.moves = new ArrayList<>();
     }
 
     private List<WinningStrategy> initWinningStrategies() {
@@ -44,55 +42,73 @@ public class Game {
         return strategies;
     }
 
+    /** Add a player before the game starts. Max 2 players supported. */
+    public void addPlayer(Player player) {
+        if (players.size() >= 2)
+            throw new IllegalStateException("Game already has the maximum number of players.");
+        symbols.add(PLAYER_SYMBOLS[players.size()]);
+        players.add(player);
+    }
+
     public synchronized void makeMove(Move move) throws InvalidMoveException {
-        if (status != GameStatus.IN_PROGRESS) {
-            throw new InvalidMoveException("Game is already over. No more moves allowed.");
-        }
-
-        if (move.getPlayerIdx() != currentPlayerIndex) {
-            throw new InvalidMoveException("It's not the current player's turn.");
-        }
-
+        validateMove(move);
         int row = move.getRow();
         int col = move.getCol();
-
-        if (!board.isCellEmpty(row, col)) {
-            throw new InvalidMoveException("Cell is already occupied. Try a different move.");
-        }
-
-        Player currentPlayer = players[currentPlayerIndex];
-        Symbol currentSymbol = symbols[currentPlayerIndex];
-
+        Symbol currentSymbol = symbols.get(currentPlayerIndex);
         move.setSymbol(currentSymbol);
         moves.add(move);
         board.setCell(row, col, currentSymbol);
 
         if (checkWin(row, col)) {
             status = GameStatus.WINNER;
-            winner = currentPlayer;
+            winner = players.get(currentPlayerIndex);
             notifyObservers();
             return;
         }
-
-        // Draw condition met
         if (board.isFull()) {
             status = GameStatus.DRAW;
             notifyObservers();
             return;
         }
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+    }
 
-        // Switch player for next turn
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.length; // Toggle between 0 and 1
+    /** Undo the last move. Reverts board, turn, and game status. */
+    public synchronized void undoMove() {
+        if (moves.isEmpty())
+            throw new InvalidMoveException("No moves to undo.");
+
+        Move last = moves.get(moves.size() - 1);
+        board.setCell(last.getRow(), last.getCol(), Symbol.EMPTY);
+
+        if (status != GameStatus.IN_PROGRESS) {
+            status = GameStatus.IN_PROGRESS;
+            winner = null;
+        }
+
+        currentPlayerIndex = (currentPlayerIndex - 1 + players.size()) % players.size();
+        moves.remove(moves.size() - 1);
+    }
+
+    private void validateMove(Move move) {
+        if (status != GameStatus.IN_PROGRESS)
+            throw new InvalidMoveException("Game is already over. No more moves allowed.");
+        if (move.getPlayerIdx() != currentPlayerIndex)
+            throw new InvalidMoveException("It's not the current player's turn.");
+        if (!board.isCellEmpty(move.getRow(), move.getCol()))
+            throw new InvalidMoveException("Cell is already occupied. Try a different move.");
     }
 
     private boolean checkWin(int row, int col) {
-        // Check for win
-        for (WinningStrategy strategy : winningStrategies) {
-            if (strategy.checkWin(board, row, col, symbols[currentPlayerIndex])) {
+        for (WinningStrategy strategy : winningStrategies)
+            if (strategy.checkWin(board, row, col, symbols.get(currentPlayerIndex)))
                 return true;
-            }
-        }
         return false;
+    }
+
+    private void notifyObservers() {
+        for (Observer observer : observers)
+            observer.notify(this);
     }
 
     public int getId() { return id; }
@@ -105,7 +121,7 @@ public class Game {
 
     public Board getBoard() { return board; }
 
-    public Player getCurrentPlayer() { return players[currentPlayerIndex]; }
+    public Player getCurrentPlayer() { return players.get(currentPlayerIndex); }
 
     public void printBoard() {
         board.printBoard();
@@ -113,11 +129,5 @@ public class Game {
 
     public void addObserver(Observer observer) {
         observers.add(observer);
-    }
-
-    private void notifyObservers() {
-        for (Observer observer : observers) {
-            observer.notify(this);
-        }
     }
 }
