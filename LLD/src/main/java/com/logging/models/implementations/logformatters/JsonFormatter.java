@@ -23,5 +23,4 @@ public class JsonFormatter implements LogFormatter {
         sb.append("\n}");
         return sb.toString();
     }
-
 }
