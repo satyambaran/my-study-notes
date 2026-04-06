@@ -14,7 +14,7 @@ public abstract class VehicleFactory {
 class OrdinaryVehicleFactory extends VehicleFactory {
 
     @Override
-    public OrdinaryVehicle getVehicle(VehicleType vehicleType) {
+    public Vehicle getVehicle(VehicleType vehicleType) {
         if (vehicleType == null) {
             return null;
         }
@@ -29,42 +29,10 @@ class OrdinaryVehicleFactory extends VehicleFactory {
     }
 }
 
-class Vehicle{
-    Drive drive;
-    Vehicle(){
-        drive = getDrive();
-    }
-    getDrive();
-}
-
-Hyundai extends Vehicle{
-    Drive drive;
-    Drive getDrive(){
-        return new NormalDrive();
-    }
-}
-
-BMW extends Vehicle{
-    Drive drive;
-    Drive getDrive(){
-        return new BMWDrive();
-    }
-}
-
-// we call a function to create the object rather than calling the constructor directly for that class
-// We can do it based on some conditions which returns different sub classes of the same parent class
-
-class OrdinaryVehicle extends Vehicle{
-    commonProperty1
-}
-class LuxuryVehicle extends Vehicle{
-    commonProperty2
-}
-
 class LuxuryVehicleFactory extends VehicleFactory {
 
     @Override
-    public LuxuryVehicle getVehicle(VehicleType vehicleType) {
+    public Vehicle getVehicle(VehicleType vehicleType) {
         if (vehicleType == null) {
             return null;
         }
