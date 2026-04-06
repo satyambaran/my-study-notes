@@ -284,6 +284,89 @@ A third class coordinates both managers — neither knows the other. Use when or
     }
     ```
 
+- **Command** — encapsulates a request as an object, decoupling the **invoker** (who triggers) from the **receiver** (who does the work). The invoker calls `command.execute()` without knowing what happens inside. Enables queuing, scheduling, and undo.
+
+    ```
+    Client → creates → ConcreteCommand(receiver) → handed to → Invoker
+    Invoker → calls → command.execute() → delegates to → Receiver.action()
+    ```
+
+    ```java
+    // Command interface
+    interface Task { void execute(); }
+
+    // Concrete command — holds its own receiver data
+    class BackupTask implements Task {
+        private String src, dest;
+        BackupTask(String src, String dest) { this.src = src; this.dest = dest; }
+        public void execute() { /* backup src → dest */ }
+    }
+
+    // Invoker — doesn't know what execute() does
+    class Scheduler {
+        void run(Task task) { task.execute(); }
+    }
+    ```
+
+    Key insight: the command **owns everything it needs** to run. The invoker never touches the receiver's internals. This is why you can queue commands, serialize them, or undo them — they're self-contained.
+
+- **Strategy** — defines a family of interchangeable algorithms, encapsulated behind a common interface. The client picks the strategy; the context (object using it) doesn't care which one.
+
+    ```
+    Context has-a Strategy
+    Context.doWork() → strategy.algorithm()
+
+    Swap strategy at runtime → behavior changes, no code changes
+    ```
+
+    ```java
+    interface SchedulingStrategy {
+        Optional<LocalDateTime> getNextExecutionTime(LocalDateTime last);
+    }
+
+    class OneTimeStrategy implements SchedulingStrategy {
+        public Optional<LocalDateTime> getNextExecutionTime(LocalDateTime last) {
+            return last == null ? Optional.of(fixedTime) : Optional.empty();
+        }
+    }
+
+    class RecurringStrategy implements SchedulingStrategy {
+        public Optional<LocalDateTime> getNextExecutionTime(LocalDateTime last) {
+            return Optional.of((last == null ? LocalDateTime.now() : last).plus(interval));
+        }
+    }
+    ```
+
+    **Strategy vs Factory:** Factory decides **which object** to create. Strategy decides **which algorithm** to use. Factory is about construction; Strategy is about behavior.
+
+- **Producer-Consumer** — decouples producers (who create work) from consumers (who process it) via a shared buffer. Producers add to the buffer; consumers take from it. Synchronization (locks, conditions) ensures no data races, no busy-waiting, and optional backpressure.
+
+    ```
+    Producer → [Bounded Buffer / Queue] → Consumer
+                     ↑                         ↑
+               notFull.await()          notEmpty.await()
+               notEmpty.signal()        notFull.signal()
+    ```
+
+    ```java
+    // Producer
+    lock.lock();
+    while (queue.size() >= capacity) notFull.await(); // backpressure
+    queue.offer(item);
+    notEmpty.signalAll(); // wake consumers
+    lock.unlock();
+
+    // Consumer
+    lock.lock();
+    while (queue.isEmpty()) notEmpty.await(); // sleep until work exists
+    Item item = queue.poll();
+    notFull.signal(); // unblock producers
+    lock.unlock();
+    process(item);
+    ```
+
+    Production systems use `BlockingQueue` which hides this. In interviews, building it manually shows you understand lock-based synchronization and condition variables.
+
 ---
 
 ## System Design Examples
