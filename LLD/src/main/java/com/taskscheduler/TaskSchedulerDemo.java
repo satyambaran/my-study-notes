@@ -12,34 +12,38 @@ public class TaskSchedulerDemo {
         TaskSchedulerService scheduler = TaskSchedulerService.getInstance();
         scheduler.addObserver(new LoggingObserver());
 
-        // 2. Initialize the scheduler
-        scheduler.initialize(10);
+        // 2. Initialize the scheduler with 3 worker threads
+        scheduler.initialize(3);
 
-        // 3. Define tasks and strategies
-        // Scenario 1: One-time task, 5 seconds from now
+        // 3. Schedule a one-time task (runs in 1 second)
         Task oneTimeTask = new PrintMessageTask("This is a one-time task.");
         SchedulingStrategy oneTimeStrategy = new OneTimeSchedulingStrategy(LocalDateTime.now().plusSeconds(1));
+        String oneTimeId = scheduler.scheduleTask(oneTimeTask, oneTimeStrategy);
 
-        // Scenario 2: Recurring task, every 3 seconds
+        // 4. Schedule a recurring task (every 2 seconds)
         Task recurringTask = new PrintMessageTask("This is a recurring task.");
         SchedulingStrategy recurringStrategy = new RecurringSchedulingStrategy(Duration.ofSeconds(2));
+        String recurringId = scheduler.scheduleTask(recurringTask, recurringStrategy);
 
-        // Scenario 3: A long-running backup task, scheduled to run in 1 second
+        // 5. Schedule a backup task (runs in 3 seconds)
         Task backupTask = new DataBackupTask("/data/source", "/data/backup");
-        SchedulingStrategy longRunningRecurringStrategy = new OneTimeSchedulingStrategy(
-                LocalDateTime.now().plusSeconds(3));
+        SchedulingStrategy backupStrategy = new OneTimeSchedulingStrategy(LocalDateTime.now().plusSeconds(3));
+        scheduler.scheduleTask(backupTask, backupStrategy);
 
-        // 4. Schedule the tasks using the facade
-        System.out.println("Scheduling tasks...");
-        scheduler.scheduleTask(oneTimeTask, oneTimeStrategy);
-        scheduler.scheduleTask(recurringTask, recurringStrategy);
-        scheduler.scheduleTask(backupTask, longRunningRecurringStrategy);
+        System.out.println("Scheduler is running. Waiting for tasks to execute...");
+        Thread.sleep(5000);
 
-        // 5. Let the demo run for a while
-        System.out.println("Scheduler is running. Waiting for tasks to execute... (Demo will run for 10 seconds)");
-        Thread.sleep(6000);
-        
-        // 6. Shutdown the scheduler
+        // 6. Demonstrate cancel — stop the recurring task
+        System.out.println("\n--- Cancelling recurring task ---");
+        scheduler.cancelTask(recurringId);
+
+        // 7. Demonstrate reschedule — reschedule the one-time task with a new strategy
+        System.out.println("--- Rescheduling one-time task as recurring (every 2s) ---");
+        scheduler.rescheduleTask(oneTimeId, new RecurringSchedulingStrategy(Duration.ofSeconds(2)));
+
+        Thread.sleep(5000);
+
+        // 8. Shutdown
         scheduler.shutdown();
     }
 }
