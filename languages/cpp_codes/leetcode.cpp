@@ -1,12 +1,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 class Node {
-   public:
+public:
     int val, key, freq;
     Node *prev, *next;
     Node(int val = 0, int key = 0, int freq = 0) {
-        this->val = val;
-        this->key = key;
+        this->val  = val;
+        this->key  = key;
         this->freq = freq;
     }
 };
@@ -15,11 +15,11 @@ class LFUCache {
     unordered_map<int, Node*> mp;
     unordered_map<int, array<Node*, 2>> freqList;
 
-   public:
+public:
     LFUCache(int capacity) {
-        sz = capacity;
-        minFreq = 0;
-        freqList[minFreq] = {new Node(), new Node()};
+        sz                         = capacity;
+        minFreq                    = 0;
+        freqList[minFreq]          = {new Node(), new Node()};
         freqList[minFreq][1]->next = freqList[minFreq][0];
         freqList[minFreq][0]->prev = freqList[minFreq][1];
     }
@@ -50,16 +50,16 @@ class LFUCache {
     void insert(Node* node) {
         minFreq = min(minFreq, node->freq);
         if (freqList.find(node->freq) == freqList.end()) {
-            freqList[node->freq] = {new Node(), new Node()};
+            freqList[node->freq]          = {new Node(), new Node()};
             freqList[node->freq][1]->next = freqList[node->freq][0];
             freqList[node->freq][0]->prev = freqList[node->freq][1];
         }
         Node *he = freqList[node->freq][0], *ta = freqList[node->freq][1];
-        Node* t = he->prev;
-        node->prev = t;
-        node->next = he;
-        he->prev = node;
-        t->next = node;
+        Node* t       = he->prev;
+        node->prev    = t;
+        node->next    = he;
+        he->prev      = node;
+        t->next       = node;
         mp[node->key] = node;
     }
     void remove(Node* node) {
@@ -86,6 +86,35 @@ class LFUCache {
     }
 };
 
+class Solution {
+public:
+    int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {
+        vector<vector<array<int, 2>>> adj(n);
+        vector<int> dis(n, INT_MAX);
+        dis[src] = 0;
+        for (int i = 0; i < flights.size(); i++) {
+            adj[flights[i][0]].push_back({flights[i][1], flights[i][2]});
+        }
+        queue<array<int, 2>> q;
+        q.push({src, 0});
+        while (k > -1 && !q.empty()) {
+            int len = q.size();
+            while (len--) {
+                auto cur = q.front();
+                q.pop();
+                for (auto tmp : adj[cur[0]]) {
+                    if (dis[tmp[0]] > dis[cur[0]] + tmp[1]) {
+                        dis[tmp[0]] = dis[cur[0]] + tmp[1];
+                        q.push({tmp[0], dis[tmp[0]]});
+                    }
+                }
+            }
+        }
+        return dis[dis];
+    }
+};
+int main() {
+}
 /**
  * Your LFUCache object will be instantiated and called as such:
  * LFUCache* obj = new LFUCache(capacity);
