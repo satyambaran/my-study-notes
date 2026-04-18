@@ -1,4 +1,4 @@
-package com.taskscheduler.models.interfaces;
+package taskscheduler.entities.interfaces;
 
 import java.time.LocalDateTime;
 import java.util.Optional;

@@ -1,4 +1,4 @@
-package com.taskscheduler.models.implementations.observers;
+package taskscheduler.entities.implementations.observers;
 
 import java.time.LocalTime;
 

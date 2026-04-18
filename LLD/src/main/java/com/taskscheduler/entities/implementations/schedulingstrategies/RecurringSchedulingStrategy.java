@@ -1,4 +1,4 @@
-package com.taskscheduler.models.implementations.schedulingstrategies;
+package taskscheduler.entities.implementations.schedulingstrategies;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

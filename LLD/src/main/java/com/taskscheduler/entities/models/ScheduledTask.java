@@ -1,4 +1,4 @@
-package com.taskscheduler.models.entities;
+package taskscheduler.entities.models;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

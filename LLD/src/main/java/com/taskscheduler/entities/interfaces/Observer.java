@@ -1,4 +1,4 @@
-package com.taskscheduler.models.interfaces;
+package taskscheduler.entities.interfaces;
 
 import com.taskscheduler.models.entities.ScheduledTask;
 
