@@ -109,7 +109,7 @@
   To calculate the sum of elements between any two indices
   - Subarray Sum Equals K
   - Range Sum Query: Efficiently calculate the sum of elements in a range
-  - Max Sum Rectangle (2D): Find the maximum sum of a rectangle in a matrixhttps://www.geeksforgeeks.org/maximum-sum-rectangle-in-a-2d-matrix-dp-27/
+  - Max Sum Rectangle (2D): Find the maximum sum of a rectangle in a matrix https://www.geeksforgeeks.org/maximum-sum-rectangle-in-a-2d-matrix-dp-27/
   - XOR prefix: for XOR-range queries (xorPrefix[r] ^ xorPrefix[l-1])
 
 # Two Pointers
