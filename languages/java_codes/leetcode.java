@@ -1,3 +1,4 @@
+import java.security.KeyStore.Entry;
 import java.util.*;
 
 public class leetcode {
@@ -252,6 +253,25 @@ class TreeNode {
 }
 
 class Solution {
+    public int longestConsecutive(int[] nums) {
+        HashMap<Integer, Integer> mp = new HashMap<>();
+        int n = nums.length;
+        for (int i = 0; i < n; i++) {
+            Integer val = mp.get(nums[i] - 1);
+            if (val == null) {
+                mp.put(nums[i], 1);
+            } else {
+                mp.put(nums[i], val + 1);
+                mp.remove(nums[i]);
+            }
+        }
+        int ans = 0;
+        for (Map.Entry<Integer, Integer> val : mp.entrySet()) {
+            ans = Math.max(ans, val.getValue());
+        }
+        return ans;
+    }
+
     private Map<String, List<TreeNode>> mp = new HashMap();
 
     private List<TreeNode> func(int l, int r) {
