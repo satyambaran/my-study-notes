@@ -302,6 +302,7 @@ public class DSA_CheatSheet {
         tmap.headMap(5); // keys < 5
         tmap.tailMap(5); // keys >= 5
         tmap.subMap(2, 6); // keys in [2,6)
+        tmap.subMap(2, true, 6, true); // keys in [2,6]
         tmap.descendingMap();
         tmap.pollFirstEntry(); // remove + return smallest entry
         tmap.pollLastEntry(); // remove + return largest entry

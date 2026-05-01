@@ -25,14 +25,14 @@ private:
 // You can toggle these booleans to enable only some checks
 // This can be useful if some of them do not compile
 constexpr bool check_001_enabled = true;
-constexpr bool check_002_enabled = false;
-constexpr bool check_003_enabled = false;
-constexpr bool check_004_enabled = false;
-constexpr bool check_005_enabled = false;
-constexpr bool check_006_enabled = false;
-constexpr bool check_007_enabled = false;
-constexpr bool check_008_enabled = false;
-constexpr bool check_009_enabled = false;
+constexpr bool check_002_enabled = true;
+constexpr bool check_003_enabled = true;
+constexpr bool check_004_enabled = true;
+constexpr bool check_005_enabled = true;
+constexpr bool check_006_enabled = true;
+constexpr bool check_007_enabled = true;
+constexpr bool check_008_enabled = true;
+constexpr bool check_009_enabled = true;
 
 // If you want to debug your code, you can write code in this function.
 // It will be executed before running the checks.
@@ -41,6 +41,38 @@ inline void user_defined_code() {}
 
 // Implement the accumulator class here
 //& from here
+
+template <typename T, typename Op>
+struct accumulator<T, Op>::pimpl {
+    T value;
+    Op op;
+    std::mutex mtx;
+
+    pimpl(T v, Op o) : value(std::move(v)), op(std::move(o)) {}
+};
+
+template <typename T, typename Op>
+accumulator<T, Op>::accumulator(T init, Op op)
+    : pimpl_(std::make_unique<pimpl>(std::move(init), std::move(op))) {}
+
+template <typename T, typename Op>
+template <typename U>
+void accumulator<T, Op>::generic_push(U&& value) {
+    std::lock_guard lock(pimpl_->mtx);
+    pimpl_->value = pimpl_->op(std::move(pimpl_->value), std::forward<U>(value));
+}
+
+template <typename T, typename Op>
+void accumulator<T, Op>::push(T value) {
+    std::lock_guard lock(pimpl_->mtx);
+    pimpl_->value = pimpl_->op(std::move(pimpl_->value), std::move(value));
+}
+
+template <typename T, typename Op>
+T accumulator<T, Op>::finalize() {
+    std::lock_guard lock(pimpl_->mtx);
+    return std::move(pimpl_->value);
+}
 
 //& till here
 // !!! SEE CHECKS IMPLEMENTATION BELOW !!! //
@@ -238,6 +270,34 @@ bool check_009() {
     }
 }
 
+void run_all_checks() {
+    std::vector<std::pair<std::string, std::function<bool()>>> checks = {
+        {"check_001", [] { return check_001(); }},
+        {"check_002", [] { return check_002(); }},
+        {"check_003", [] { return check_003(); }},
+        {"check_004", [] { return check_004(); }},
+        {"check_005", [] { return check_005(); }},
+        {"check_006", [] { return check_006(); }},
+        {"check_007", [] { return check_007(); }},
+        {"check_008", [] { return check_008(); }},
+        {"check_009", [] { return check_009(); }},
+    };
+
+    int passed = 0, skipped = 0, failed = 0;
+    for (auto& [name, fn] : checks) {
+        bool result = fn();
+        if (result) {
+            std::cout << name << " - OK\n";
+            ++passed;
+        } else {
+            // false means either disabled (skipped) or actual failure
+            std::cout << name << " - SKIPPED/KO\n";
+            ++skipped;
+        }
+    }
+    std::cout << "\n" << passed << " passed, " << skipped << " skipped/failed\n";
+}
+
 int main() {
     std::unordered_map<std::string, std::function<bool()>> checks = {
         {"check_001", [] { return check_001(); }},
@@ -256,8 +316,13 @@ int main() {
 
     std::string check;
     std::cin >> check;
-    auto success = checks.at(check)();
-    std::cout << check << " - " << (success ? "OK" : "KO") << std::endl;
+
+    if (check == "all") {
+        run_all_checks();
+    } else {
+        auto success = checks.at(check)();
+        std::cout << check << " - " << (success ? "OK" : "KO") << std::endl;
+    }
 
     return 0;
 }
