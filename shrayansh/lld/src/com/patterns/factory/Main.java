@@ -23,7 +23,7 @@ class ShapeFactory {
             case SQUARE:
                 return new Square();
             default:
-                return new NullShape();
+                return null;
         }
     }
 }
@@ -60,8 +60,7 @@ public class Main {
         List<Shape> shapes = new ArrayList<>(Arrays.asList(
                 factory.getShape(ShapeType.CIRCLE),
                 factory.getShape(ShapeType.RECTANGLE),
-                factory.getShape(ShapeType.SQUARE),
-                factory.getShape(ShapeType.ELLIPSE)));
+                factory.getShape(ShapeType.SQUARE)));
         for (Shape shape : shapes) {
             shape.draw();
         }

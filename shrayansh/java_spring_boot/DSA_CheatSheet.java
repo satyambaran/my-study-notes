@@ -2,7 +2,6 @@ import java.util.*;
 import java.util.stream.*;
 
 public class DSA_CheatSheet {
-
     // ─────────────────────────────────────────────
     // CUSTOM HASHING: wrap key in a class with hashCode + equals
     // Use when: default Object identity hash isn't what you want
@@ -54,12 +53,9 @@ public class DSA_CheatSheet {
 
     static Set<Integer> other_set = new HashSet<>();
 
-    static int gcd(int a, int b) {
-        return b == 0 ? a : gcd(b, a % b);
-    }
+    static int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b); }
 
     public static void main(String[] args) {
-
         // ─────────────────────────────────────────────
         // SCANNER & PRINT
         // ─────────────────────────────────────────────
@@ -87,16 +83,13 @@ public class DSA_CheatSheet {
         int total = Arrays.stream(arr).sum(); // sum of elements
         System.out.println(Arrays.toString(arr)); // print 1D
         System.out.println(Arrays.deepToString(new int[][] { { 1, 2 }, { 3, 4 } })); // print 2D
-
         // 2D array
         int[][] grid = new int[3][4];
         int[][] grid2 = { { 1, 2 }, { 3, 4 } };
-
         // Integer array (needed for custom sort — primitives can't use Comparator)
         Integer[] boxed = { 3, 1, 2 };
         Arrays.sort(boxed, (x, y) -> y - x); // sort descending
         Arrays.sort(boxed, Comparator.reverseOrder()); // same
-
         // ─────────────────────────────────────────────
         // STRING
         // ─────────────────────────────────────────────
@@ -136,7 +129,6 @@ public class DSA_CheatSheet {
         Character.isLetter('a');
         Character.isUpperCase('A');
         Character.toLowerCase('A');
-
         // ─────────────────────────────────────────────
         // STRINGBUILDER (mutable, faster than + in loops)
         // ─────────────────────────────────────────────
@@ -153,15 +145,14 @@ public class DSA_CheatSheet {
         sb.length();
         sb.indexOf("world");
         sb.toString(); // convert to String
-        for(int i=9; i>=0; i--){
-        // sb.append(String.valueOf(i).repeat(cnt[i]));
+        for (int i = 9; i >= 0; i--) {
+            // sb.append(String.valueOf(i).repeat(cnt[i]));
         }
-
         // ─────────────────────────────────────────────
         // ARRAYLIST (dynamic array, like vector<int>)
         // ─────────────────────────────────────────────
         List<Integer> list = new ArrayList<>();
-        List.of(null) //throws NPE: List.of doesn't allow null elements — use 
+        // List.of(null); //throws NPE: List.of doesn't allow null elements — use
         Collections.singletonList(null);// instead
         list.add(1); // append
         list.add(0, 99); // insert at index
@@ -192,7 +183,6 @@ public class DSA_CheatSheet {
         new ArrayList<>(List.of(1, 2, 3)); // mutable copy
         // binary search (list must be sorted)
         int pos = Collections.binarySearch(list, 5); // index or -(insertion_point)-1
-
         // ─────────────────────────────────────────────
         // LOWER_BOUND / UPPER_BOUND (C++ equivalent)
         // ─────────────────────────────────────────────
@@ -207,7 +197,6 @@ public class DSA_CheatSheet {
         // For upper_bound: search target+1 or adjust
         int res2 = Collections.binarySearch(list, target + 1);
         int upperBound = (res2 >= 0) ? res2 : -(res2 + 1); // first > target
-
         // ─────────────────────────────────────────────
         // STACK (use Deque, not Stack class)
         // ─────────────────────────────────────────────
@@ -217,7 +206,6 @@ public class DSA_CheatSheet {
         stack.peek(); // view top (null if empty)
         stack.isEmpty();
         stack.size();
-
         // ─────────────────────────────────────────────
         // QUEUE (FIFO)
         // ─────────────────────────────────────────────
@@ -227,7 +215,6 @@ public class DSA_CheatSheet {
         queue.peek(); // front (null if empty)
         queue.isEmpty();
         queue.size();
-
         // ─────────────────────────────────────────────
         // DEQUE (double-ended queue)
         // ─────────────────────────────────────────────
@@ -240,7 +227,6 @@ public class DSA_CheatSheet {
         dq.peekFirst(); // remove/view front
         dq.pollLast();
         dq.peekLast(); // remove/view back
-
         // ─────────────────────────────────────────────
         // PRIORITY QUEUE (min-heap by default)
         // ─────────────────────────────────────────────
@@ -258,7 +244,6 @@ public class DSA_CheatSheet {
         minHeap.size();
         minHeap.isEmpty();
         minHeap.contains(3);
-
         // ─────────────────────────────────────────────
         // HASHMAP (unordered map, O(1) avg)
         // ─────────────────────────────────────────────
@@ -283,10 +268,8 @@ public class DSA_CheatSheet {
         for (Integer val : map.values()) {
             /* value only */ }
         // sort entries by value
-        map.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue())
+        map.entrySet().stream().sorted(Map.Entry.comparingByValue())
                 .forEach(e -> System.out.println(e.getKey() + "=" + e.getValue()));
-
         // ─────────────────────────────────────────────────────────
         // HASHMAP WITH CUSTOM KEY (uses Point.hashCode + equals)
         // ─────────────────────────────────────────────────────────
@@ -294,12 +277,10 @@ public class DSA_CheatSheet {
         pointMap.put(new Point(1, 2), 10);
         pointMap.get(new Point(1, 2)); // 10 (works because hashCode+equals overridden)
         pointMap.containsKey(new Point(1, 2)); // true
-
         // array/list as key workaround — use String encoding
         Map<String, Integer> arrKeyMap = new HashMap<>();
         int[] key = { 1, 2, 3 };
         arrKeyMap.put(Arrays.toString(key), 42); // "1, 2, 3" → 42
-
         // ─────────────────────────────────────────────
         // TREEMAP (sorted by key, O(log n), like map<> in C++)
         // ─────────────────────────────────────────────
@@ -321,10 +302,10 @@ public class DSA_CheatSheet {
         tmap.headMap(5); // keys < 5
         tmap.tailMap(5); // keys >= 5
         tmap.subMap(2, 6); // keys in [2,6)
+        tmap.subMap(2, true, 6, true); // keys in [2,6]
         tmap.descendingMap();
         tmap.pollFirstEntry(); // remove + return smallest entry
         tmap.pollLastEntry(); // remove + return largest entry
-
         // ─────────────────────────────────────────────
         // HASHSET (unordered, O(1) avg)
         // ─────────────────────────────────────────────
@@ -339,7 +320,6 @@ public class DSA_CheatSheet {
         set.removeAll(other_set); // difference (removes common)
         for (int x : set) {
             /* iterate */ }
-
         // ─────────────────────────────────────────────
         // TREESET (sorted set, O(log n), like set<> in C++)
         // ─────────────────────────────────────────────
@@ -366,7 +346,6 @@ public class DSA_CheatSheet {
         tset.pollFirst(); // remove + return smallest
         tset.pollLast(); // remove + return largest
         tset.descendingSet();
-
         // Custom comparator set (e.g., reverse order)
         TreeSet<Integer> revSet = new TreeSet<>(Collections.reverseOrder());
         // Custom object set (sort by length then lex)
@@ -375,7 +354,6 @@ public class DSA_CheatSheet {
                 return a1.length() - b1.length();
             return a1.compareTo(b1);
         });
-
         // ─────────────────────────────────────────────
         // LINKEDLIST (doubly-linked, O(1) insert/delete at ends)
         // ─────────────────────────────────────────────
@@ -387,7 +365,6 @@ public class DSA_CheatSheet {
         ll.peekFirst();
         ll.peekLast();
         ll.get(0); // O(n) random access
-
         // ─────────────────────────────────────────────
         // ITERATOR
         // ─────────────────────────────────────────────
@@ -402,25 +379,19 @@ public class DSA_CheatSheet {
         while (lit.hasPrevious()) {
             int elem = lit.previous();
         }
-
         // ─────────────────────────────────────────────
         // CUSTOM COMPARATORS — all patterns in one place
         // ─────────────────────────────────────────────
-
         // 1. Sort 2D array: by first col asc, then second col desc
         int[][] matrix = { { 3, 2 }, { 1, 5 }, { 1, 2 } };
         Arrays.sort(matrix, (x, y) -> x[0] != y[0] ? x[0] - y[0] : y[1] - x[1]);
         // result: [[1,5],[1,2],[3,2]]
-
         // 2. Sort List<int[]>: by sum desc
         List<int[]> pairs = new ArrayList<>(Arrays.asList(new int[] { 1, 3 }, new int[] { 2, 2 }));
         pairs.sort((x, y) -> (y[0] + y[1]) - (x[0] + x[1]));
-
         // 3. Sort List<String>: by length asc, then lex asc
         List<String> words = new ArrayList<>(List.of("banana", "apple", "fig", "cherry"));
-        words.sort(Comparator.comparingInt(String::length)
-                .thenComparing(Comparator.naturalOrder()));
-
+        words.sort(Comparator.comparingInt(String::length).thenComparing(Comparator.naturalOrder()));
         // 4. Sort custom objects
         List<Student> students = new ArrayList<>();
         students.add(new Student("Alice", 20));
@@ -428,11 +399,8 @@ public class DSA_CheatSheet {
         Collections.sort(students); // uses Student.compareTo (age asc)
         students.sort((x, y) -> y.age - x.age); // override: age desc
         students.sort(Comparator.comparing((Student st) -> st.name)); // by name
-
         // 5. Multi-key Comparator chain (cleaner syntax)
-        students.sort(Comparator.comparingInt((Student st) -> st.age)
-                .thenComparing(st -> st.name));
-
+        students.sort(Comparator.comparingInt((Student st) -> st.age).thenComparing(st -> st.name));
         // 6. TreeMap with custom comparator (sort by string length)
         TreeMap<String, Integer> byLen = new TreeMap<>(
                 Comparator.comparingInt(String::length).thenComparing(Comparator.naturalOrder()));
@@ -440,16 +408,13 @@ public class DSA_CheatSheet {
         byLen.put("fig", 2);
         byLen.put("cherry", 3);
         // iteration order: fig, apple, cherry
-
         // 7. TreeSet with custom comparator (intervals sorted by start, then end)
         TreeSet<int[]> intervals = new TreeSet<>((x, y) -> x[0] != y[0] ? x[0] - y[0] : x[1] - y[1]);
         intervals.add(new int[] { 1, 5 });
         intervals.add(new int[] { 1, 3 });
         intervals.add(new int[] { 2, 4 });
-
         // 8. PriorityQueue: max-heap of int[] by first element
         PriorityQueue<int[]> maxPQ = new PriorityQueue<>((x, y) -> y[0] - x[0]);
-
         // ─────────────────────────────────────────────
         // MATH
         // ─────────────────────────────────────────────
@@ -468,13 +433,11 @@ public class DSA_CheatSheet {
         int INT_MIN = Integer.MIN_VALUE; // -2^31
         long LONG_MAX = Long.MAX_VALUE; // 2^63 - 1
         gcd(12, 8); // 4 (defined as static method below)
-
         // ─────────────────────────────────────────────
         // STREAMS (functional operations, like C++ ranges)
         // ─────────────────────────────────────────────
         List<Integer> nums = List.of(1, 2, 3, 4, 5);
-        nums.stream()
-                .filter(x -> x % 2 == 0) // keep evens
+        nums.stream().filter(x -> x % 2 == 0) // keep evens
                 .map(x -> x * x) // square
                 .sorted() // sort
                 .distinct() // remove duplicates
@@ -493,7 +456,6 @@ public class DSA_CheatSheet {
         // group by length
         Map<Integer, List<String>> grouped = Stream.of("a", "bb", "cc", "ddd")
                 .collect(Collectors.groupingBy(String::length));
-
         // ─────────────────────────────────────────────
         // USEFUL CONVERSIONS
         // ─────────────────────────────────────────────

@@ -9,7 +9,7 @@ Ensures that the value in one table corresponds to a valid record in another tab
 
 There are several normal forms (NF), each aiming to reduce redundancy and improve integrity:
 
-    1. 1NF: All values are atomic; no repeating groups.
+  1. 1NF: All values are atomic; no repeating groups.
 	2. 2NF: No partial dependency; separate student data.
 	3. 3NF: No transitive dependency; separate course and instructor data.
 	4. BCNF: Every determinant is a superkey; further decomposition if necessary.
