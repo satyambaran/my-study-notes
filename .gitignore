@@ -1,4 +1,6 @@
 **/__MACOSX/**
+**/bin/
+*.xlsx
 **/rust/**/target/**
 **/*.class
 **/out/**/*.class
@@ -10,3 +12,4 @@
 **/out/**/*.DS_Store
 **/*.DS_Store
 **/out/**/*.idea/
+shrayansh/lld/src/com/interviewcodingpractise

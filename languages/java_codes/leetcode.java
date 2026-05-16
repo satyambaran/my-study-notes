@@ -1,4 +1,3 @@
-import java.security.KeyStore.Entry;
 import java.util.*;
 
 public class leetcode {
@@ -63,7 +62,8 @@ public class leetcode {
     public boolean findTarget(TreeNode root, int k) {
         TreeNode cur = root;
         Stack<TreeNode> left = new Stack<>();
-        Stack<TreeNode> right = new ArrayDeque<>();
+        Stack<TreeNode> right = new Stack<>();
+        // Stack<TreeNode> right = new ArrayDeque<>();
         while (cur != null) {
             left.add(cur);
             cur = cur.left;
@@ -107,9 +107,12 @@ public class leetcode {
         int val;
         ListNode next;
 
-        ListNode() {}
+        ListNode() {
+        }
 
-        ListNode(int val) { this.val = val; }
+        ListNode(int val) {
+            this.val = val;
+        }
 
         ListNode(int val, ListNode next) {
             this.val = val;
@@ -177,8 +180,8 @@ public class leetcode {
     int dfs(int[] prices, int idx, int trnsLeft, int hold) {
         if (idx >= prices.length || trnsLeft == 0)
             return 0;
-        if (memo[idx][trnsLeft][hold] != Integer.MIN_VALUE)
-            return memo[idx][trnsLeft][hold];
+        if (memo[idx][trnsLeft][hold] != Long.MIN_VALUE)
+            return (int) memo[idx][trnsLeft][hold];
         int res = dfs(prices, idx + 1, trnsLeft, hold); // skip
         if (hold == 0) {
             // buy
@@ -241,9 +244,12 @@ class TreeNode {
     TreeNode left;
     TreeNode right;
 
-    TreeNode() {}
+    TreeNode() {
+    }
 
-    TreeNode(int val) { this.val = val; }
+    TreeNode(int val) {
+        this.val = val;
+    }
 
     TreeNode(int val, TreeNode left, TreeNode right) {
         this.val = val;
@@ -272,7 +278,7 @@ class Solution {
         return ans;
     }
 
-    private Map<String, List<TreeNode>> mp = new HashMap();
+    private Map<String, List<TreeNode>> mp = new HashMap<>();
 
     private List<TreeNode> func(int l, int r) {
         if (l > r)
@@ -293,7 +299,7 @@ class Solution {
                     TreeNode node = new TreeNode(i);
                     node.left = ln;
                     node.right = rn;
-                    mp.computeIfAbsent(key, k -> new ArrayList()).add(node);
+                    mp.computeIfAbsent(key, k -> new ArrayList<>()).add(node);
                 }
             }
         }
@@ -387,12 +393,100 @@ class Solution {
 
     public int longestIncreasingPath(int[][] matrix) {
         int n = matrix.length, m = matrix[0].length, ans = 0;
-        int[][] dir = new int[n][m];
         int[][] dis = new int[n][m];
         // PriorityQueue<int[]> pq = new PriorityQueue<>((x, y) -> x[0] - y[0]);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
                 ans = Math.max(ans, dfs(i, j, matrix, dis));
+            }
+        }
+        return ans;
+    }
+
+    // int[] dxx = Arrays.of(0, 0, -1, 1);
+    // int[] dyy = Arrays.of(-1, 1, 0, 0);
+
+    // public int shortestPath(int[][] grid, int k) {
+    // int n = grid.length, m = grid[0].length;
+    // if (k >= n + m - 3)
+    // return n + m - 2;
+    // // we will process all the nodes and maintain a queue of nodes reachable in
+    // // minimum state
+    // int[][][] dis = new int[n][m][k];
+    // for (int i = 0; i < n; i++)
+    // for (int j = 0; j < m; j++)
+    // Arrays.fill(dis[i][j], Integer.MAX_VALUE);
+    // Queue<int[]> q = new ArrayDeque<>();
+    // q.push(Arrays.of(0, 0, k));
+    // // int[] base = dis[0][0];
+    // // Arrays.fill(base, 0);
+    // dis[0][0][k] = 0;
+    // while (!q.isEmpty()) {
+    // int[] cur = q.poll();
+    // int x = cur[0], y = cur[1], rem = cur[2];
+    // // if(dis[x])
+    // for (int i = 0; i < 4; i++) {
+    // int nx = x + dx[i], ny = y + dy[i];
+    // if (grid[nx][ny] == 1) {
+    // if (dis[nx][ny][rem - 1] > dis[x][y][rem] + 1) {
+    // dis[nx][ny][rem - 1] = dis[x][y][rem] + 1;
+    // q.push(Arrays.of(nx, ny, rem - 1));
+    // }
+    // } else {
+    // if (dis[nx][ny][rem] > dis[x][y][rem] + 1) {
+    // dis[nx][ny][rem] = dis[x][y][rem] + 1;
+    // q.push(Arrays.of(nx, ny, rem));
+    // }
+    // }
+    // }
+    // }
+    // int ans = Arrays.min(dis[n - 1][m - 1]);
+    // return ans == Integer.MAX_VALUE ? -1 : ans;
+    // }
+
+    public int carFleet(int target, int[] position, int[] speed) {
+        /*
+         * x u. target
+         * y v
+         * 
+         * pos = x + ut = y+vt <= target
+         * 
+         * t = (x-y)/(v-u)
+         * 
+         * (xv -xu + ux -uy)/(v-u) <= target
+         * (xv-uy)/(v-u) <= t
+         * 
+         */
+        PriorityQueue<int[]> pq = new PriorityQueue<>((x, y) -> y[0] - x[0]);
+        for (int i = 0; i < position.length; i++) {
+            pq.add(new int[] { position[i], speed[i] });
+        }
+        int ans = 1;
+        int curPos = pq.peek()[0], curSpeed = pq.peek()[1];
+        while (!pq.isEmpty()) {
+            int[] cur = pq.poll();
+            // is catchable
+            if (cur[0] == curPos) {
+
+            } else {
+                if (cur[1] > curSpeed) {
+                    // might be catchable
+                    long dis1 = (long) curPos * cur[1] - (long) cur[0] * curSpeed;
+                    long dis2 = (long) target * (cur[1] - curSpeed);
+                    if (dis1 <= dis2) {
+                        // catchable
+                    } else {
+                        // not catchable
+                        curPos = cur[0];
+                        curSpeed = cur[1];
+                        ans++;
+                    }
+                } else {
+                    // not catchable
+                    curPos = cur[0];
+                    curSpeed = cur[1];
+                    ans++;
+                }
             }
         }
         return ans;

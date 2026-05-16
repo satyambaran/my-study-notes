@@ -36,6 +36,10 @@
 	For class/system design: ask read/write ratio, sparseness, error handling preference.
 
 === DSA APPROACHES ===
+# Optimised based on input type, constraints, and what the question is asking for (e.g. just count vs. list all)
+	Car Fleet:
+		O(n): https://leetcode.com/problems/car-fleet/submissions/2000825697/
+		O(n log n): https://leetcode.com/problems/car-fleet/submissions/2000821505/
 
 # Dynamic Programming
   When: answer is easy if you knew the answer to a smaller sub-problem. 
@@ -45,20 +49,20 @@
 	Recursively break it down to smaller subproblems and store the results to use it later whenever it's required again
 	~ Definitely solves the smaller problems first, but it's WHILE solving the bigger problems
 	Avoid redundant repetitive calculations using Memoization
-    - Fibonacci, Climbing Stairs, 0/1 Knapsack
-    - Mountain Range: https://cses.fi/problemset/result/16683972/
+	- Fibonacci, Climbing Stairs, 0/1 Knapsack
+	- Mountain Range: https://cses.fi/problemset/result/16683972/
   Bottom-Up (Tabulation): fill table iteratively, small → large
 	Build up the solution from smallest unit first iteratively by solving all the subproblems first
 	~ Need to solve the sub-problems first to solve the bigger problem later
-    - Longest Common Subsequence (LCS), Coin Change, Edit Distance
+	- Longest Common Subsequence (LCS), Coin Change, Edit Distance
 
   Tricks:
-    - 2D → 1D space optimization:  https://leetcode.com/problems/maximum-number-of-points-with-cost/solutions/5647834/
-    - 2-directional DP:            https://leetcode.com/problems/candy/submissions/1462619749/
-    - 3D DP — 
-	  Burst Balloons: https://leetcode.com/problems/burst-balloons/submissions/1467194807/
-      Merge Stones: https://leetcode.com/problems/minimum-cost-to-merge-stones/
-    - DP + Bitmask: when n is small (~20), enumerate all subsets
+	- 2D → 1D space optimization:  https://leetcode.com/problems/maximum-number-of-points-with-cost/solutions/5647834/
+	- 2-directional DP:            https://leetcode.com/problems/candy/submissions/1462619749/
+	- 3D DP — 
+		Burst Balloons: https://leetcode.com/problems/burst-balloons/submissions/1467194807/
+		Merge Stones: https://leetcode.com/problems/minimum-cost-to-merge-stones/
+	- DP + Bitmask: when n is small (~20), enumerate all subsets
 		When we need to check all the combinations (e.g. Min XOR all pairs, TSP)
 
   Bellman-Ford: 
@@ -66,9 +70,9 @@
   	SSSP with negative edges, O(VE). V-1 relaxations; Vth run detects negative cycle.
 
   Eulerian Circuit (visit every edge exactly once, return to start):
-    - All node degrees must be even (undirected)
-    - Hierholzer's: DFS; when no more edges from node, push to result
-      dfs(node): while graph[node] not empty → pick & mark edge visited, dfs(neighbor); result.add(node)
+	- All node degrees must be even (undirected)
+	- Hierholzer's: DFS; when no more edges from node, push to result
+	  dfs(node): while graph[node] not empty → pick & mark edge visited, dfs(neighbor); result.add(node)
 	The objective is to visit every edge of the graph exactly once, starting and ending at the same vertex (in this case, the post office at crossing 1)
 	:= 
 		maintain a degree, check if all degree is even or not
@@ -86,7 +90,7 @@
 			result.add(node);
 		}
   TSP (visit every vertex exactly once and return to start, minimize cost): DP + bitmask, O(2^n * n^2)
-    https://www.geeksforgeeks.org/travelling-salesman-problem-using-dynamic-programming/
+	https://www.geeksforgeeks.org/travelling-salesman-problem-using-dynamic-programming/
 
 # Greedy
   Locally optimal choice → global optimum. Often sort first.
@@ -122,16 +126,16 @@
 	` BST Iterator
   	https://leetcode.com/problems/two-sum-iv-input-is-a-bst/submissions/1462653829/
   * Kadane's (max subarray, variable window):
-    Fix start, extend end; reset start = end+1 when condition breaks.
-    - Maximum Subarray: Find the contiguous subarray with the largest sum
+	Fix start, extend end; reset start = end+1 when condition breaks.
+	- Maximum Subarray: Find the contiguous subarray with the largest sum
 	- Gas Station: https://leetcode.com/problems/gas-station/submissions/1401255598/
 
   * Sliding Window (fixed-size window, L and R stay distance k apart):
-    - Maximum Sum Subarray of size k: Find the subarray with the maximum sum
+	- Maximum Sum Subarray of size k: Find the subarray with the maximum sum
 	- Permutation in String: https://leetcode.com/problems/permutation-in-string/submissions/1462653829/
 
   * Rolling Hash (detect repeated substrings of fixed length):
-    - Repeated DNA Sequences: https://leetcode.com/problems/repeated-dna-sequences/submissions/1386917764/
+	- Repeated DNA Sequences: https://leetcode.com/problems/repeated-dna-sequences/submissions/1386917764/
 
 # Divide and Conquer
   Split → solve halves → merge. Recurrence: T(n) = aT(n/b) + f(n).
@@ -147,25 +151,25 @@
   - LargestBST: https://www.geeksforgeeks.org/find-the-largest-subtree-in-a-tree-that-is-also-a-bst/
 
 # Monotonic Stack
-  Maintain strictly increasing or decreasing elements in a stack.
-  When: next/previous greater/smaller element for each index.
-  - Next Greater Element, Daily Temperatures
-  - Largest Rectangle in Histogram: Find the largest rectangle in a histogramhttps://leetcode.com/problems/largest-rectangle-in-histogram/submissions/1378082792/
-  - Car Fleet: https://leetcode.com/problems/car-fleet/
+	Maintain strictly increasing or decreasing elements in a stack.
+	When: next/previous greater/smaller element for each index.
+	- Next Greater Element, Daily Temperatures
+	- Largest Rectangle in Histogram: Find the largest rectangle in a histogramhttps://leetcode.com/problems/largest-rectangle-in-histogram/submissions/1378082792/
+	- Car Fleet: https://leetcode.com/problems/car-fleet/
 
 # Monotonic Deque
-  Sliding window max/min in O(n). Deque stores indices in decreasing value order.
-  Insert at back (pop smaller), evict front if out of window, front = current window max.
-  Need to find the maximum or minimum element in a sliding window
-  - Sliding Window Maximum: https://leetcode.com/problems/sliding-window-maximum/submissions/1414797294/
+	Sliding window max/min in O(n). Deque stores indices in decreasing value order.
+	Insert at back (pop smaller), evict front if out of window, front = current window max.
+	Need to find the maximum or minimum element in a sliding window
+		- Sliding Window Maximum: https://leetcode.com/problems/sliding-window-maximum/submissions/1414797294/
 # Binary Search
-  On sorted array, or when "is X a valid answer?" is easier than "find X directly".
-			Find an element in a sorted array
-			If checking whether a number is its solution is easier than finding the answer
-				then decide the limits and use BS to get the answer
-  - Rotated Sorted Array: https://leetcode.com/problems/search-in-rotated-sorted-array/submissions/1468114517/
-  - Pattern: lo=minAnswer, hi=maxAnswer; binary search the answer space
-  - Template: while(lo<=hi){ mid=(lo+hi)/2; if(valid(mid)) {ans=mid; hi=mid-1;} else lo=mid+1; }
+	On sorted array, or when "is X a valid answer?" is easier than "find X directly".
+		Find an element in a sorted array
+		If checking whether a number is its solution is easier than finding the answer
+			then decide the limits and use BS to get the answer
+	- Rotated Sorted Array: https://leetcode.com/problems/search-in-rotated-sorted-array/submissions/1468114517/
+	- Pattern: lo=minAnswer, hi=maxAnswer; binary search the answer space
+	- Template: while(lo<=hi){ mid=(lo+hi)/2; if(valid(mid)) {ans=mid; hi=mid-1;} else lo=mid+1; }
 
 # Backtracking
   Explore all possible solutions; undo state (backtrack) on dead ends.
@@ -179,115 +183,132 @@
   Explore branch fully (as far as possible along each branch) before backtracking.
   - Graph Traversal: Visit all nodes in a graph
   - Path finding: maintain parent of each node
-  - Cycle (undirected): track parent; cycle if visited[neighbor != parent]
+  - Cycle (undirected): track parent; cycle if visited[neighbor] != parent
   - Cycle (directed):   track recursion stack (white/gray/black coloring)
   - Connected Components, Path Finding (track parent map for path reconstruction)
   - Round Trip II: maintain chain of DFS-visited vertices
 
   Strongly Connected Components — Kosaraju's:
 	have adjList and it's transpose
-    Pass 1: DFS on original graph → push node to stack on finish `foreach i if(!vis[i]) dfs1(i, adj)`
-    dfs1(node, adj):     if vis → return; vis=1; for neigh: dfs1(neigh); stack.push(node)
-    Pass 2: Reset visited; DFS on transposed graph in reverse finish order → each run = 1 SCC
-    dfs2(node, k, adj2): if vis → return; vis=1; comp[node]=k; for neigh: dfs2(neigh)
-    if any comp[i]==-1 → graph not strongly connected
+	Pass 1: DFS on original graph → push node to stack on finish `foreach i if(!vis[i]) dfs1(i, adj)`
+	dfs1(node, adj):     if vis → return; vis=1; for neigh: dfs1(neigh); stack.push(node)
+	Pass 2: Reset visited; DFS on transposed graph in reverse finish order → each run = 1 SCC
+	dfs2(node, k, adj2): if vis → return; vis=1; comp[node]=k; for neigh: dfs2(neigh)
+	if any comp[i]==-1 → graph not strongly connected
 
 # BFS
-  Level-by-level: Explore all neighbors at the present level before moving on to nodes at the next depth level
-  Optimal for unweighted shortest paths.
-  - Snapshot queue.size() before each level (clean Level Order Traversal)
-  - Shortest Path in Binary Matrix
-  - Path tracing: store 'came from' node for each visited node
+	Level-by-level: Explore all neighbors at the present level before moving on to nodes at the next depth level
+	Optimal for unweighted shortest paths.
+	- Snapshot queue.size() before each level (clean Level Order Traversal)
+	- Shortest Path in Binary Matrix
+	- Path tracing: store 'came from' node for each visited node
 
-  Minimum Depth of Binary Tree: Find the minimum depth of a binary tree.
-  ~ Level Order Traversal: Traverse a binary tree level by level
-	Store length of queue at each level, before start processing it
-  Multi-source BFS: enqueue all sources at start (e.g. 0-1 matrix distances, Monsters-CSES)
+	Minimum Depth of Binary Tree: Find the minimum depth of a binary tree.
+	~ Level Order Traversal: Traverse a binary tree level by level
+		Store length of queue at each level, before start processing it
+	Multi-source BFS: enqueue all sources at start (e.g. 0-1 matrix distances, Monsters-CSES)
 
-  Dijkstra (BFS + min-heap): SSSP, non-negative weights, O((V+E) log V)
-  	Shortest path from a single source node to all other nodes in a graph with non-negative edge weights
-  Floyd-Warshall: all-pairs shortest path, O(V^3). dp[i][j] = min over intermediate k.
-	Shortest paths between all pairs of nodes in a weighted graph
-	Planet queries (Binary jump)
-		Given a transporter of each planet. Each planet has a teleporter to another planet (or the planet itself). 
-			1. Determine if you start from a node, in k steps where you'll reach
-			2. minimum steps to reach from a to b
-		vector<vector<int>> v(n, vector<int>(30));
-		for(i=0;i<n;i++) cin >> v[i][0];
-		for(i=1;i<30;i++) for(j=0;j<n;j++) v[j][i] = v[v[j][i - 1]][i - 1];
-		for (int i = 0; i < query.size(); i++) {
-			for (int j = 0; j < 30; j++) {
-				if (b & (1 << j)) {
-					a = v[a][j];
+	Dijkstra (BFS + min-heap): SSSP, non-negative weights, O((V+E) log V)
+		Shortest path from a single source node to all other nodes in a graph with non-negative edge weights
+	Floyd-Warshall: all-pairs shortest path, O(V^3). dp[i][j] = min over intermediate k.
+		Shortest paths between all pairs of nodes in a weighted graph
+		Planet queries (Binary jump)
+			Given a transporter of each planet. Each planet has a teleporter to another planet (or the planet itself). 
+				1. Determine if you start from a node, in k steps where you'll reach
+				2. minimum steps to reach from a to b
+			vector<vector<int>> v(n, vector<int>(30));
+			for(i=0;i<n;i++) cin >> v[i][0];
+			for(i=1;i<30;i++) for(j=0;j<n;j++) v[j][i] = v[v[j][i - 1]][i - 1];
+			for (int i = 0; i < query.size(); i++) {
+				for (int j = 0; j < 30; j++) {
+					if (b & (1 << j)) {
+						a = v[a][j];
+					}
 				}
 			}
-		}
-  Binary Lifting (functional graph — find node after k steps):
-    Precompute v[j][i] = node reached from j after 2^i steps
-    for i in 1..LOG: for j in 0..n-1: v[j][i] = v[v[j][i-1]][i-1]
-    Query: decompose k in binary, apply jumps → O(log k)
+	Binary Lifting (functional graph — find node after k steps):
+		Precompute v[j][i] = node reached from j after 2^i steps
+		for i in 1..LOG: for j in 0..n-1: v[j][i] = v[v[j][i-1]][i-1]
+		Query: decompose k in binary, apply jumps → O(log k)
 
 # Union-Find (Disjoint Set)
-  foreach i in 0..n-1: par[i]=i initially
-  find(x):    if par[x]!=x → par[x]=find(par[x]); return par[x]   // path compression
-  union(x,y): par[find(y)] = find(x)                               // union by rank for O(a(n))
-  Complexity: O(a(n)) ~= O(1) per op (a = inverse Ackermann, <= 4 for any practical n)
-			Kruskal’s Algorithm: Find the Minimum Spanning Tree of a graph.
-  - Kruskal's MST: 
-  	Sort edges by weight in non-decreasing order, 
-	Pick the smallest edge and greedily add if no cycle (use union-find check). 
-	Repeat until there are (V-1) edges in the spanning tree.
-  - Number of Islands, Connected Components, Redundant Connection
-  Worst case Time Complexity:
-				The worst-case time complexity of the Union-Find (Disjoint Set) algorithm depends on how the data structure is implemented. Specifically, the complexity is determined by the techniques used to optimize the operations: path compression and union by rank/size.
+	foreach i in 0..n-1: par[i]=i initially
+	find(x):    if par[x]!=x → par[x]=find(par[x]); return par[x]   // path compression
+	union(x,y): par[find(y)] = find(x)                               // union by rank for O(a(n))
+	Complexity: O(a(n)) ~= O(1) per op (a = inverse Ackermann, <= 4 for any practical n)
+				Kruskal’s Algorithm: Find the Minimum Spanning Tree of a graph.
+	- Kruskal's MST: 
+		Sort edges by weight in non-decreasing order, 
+		Pick the smallest edge and greedily add if no cycle (use union-find check). 
+		Repeat until there are (V-1) edges in the spanning tree.
 
-				1. Basic Union-Find (No Optimization)
+        void unionByRank(int vertexA, int vertexB) {
+            int parentA = findParent(vertexA);
+            int parentB = findParent(vertexB);
 
-					•	Union Operation: ￼
-					•	In the worst case, one tree is added as a child of another without considering their sizes or depths, leading to highly unbalanced trees.
-					•	Find Operation: ￼
-					•	Without optimization, the find operation might traverse the entire height of an unbalanced tree.
+            if (parentA == parentB) return;
 
-				2. Optimized Union-Find (with Path Compression and Union by Rank/Size)
+            if (rank[parentA] < rank[parentB]) {
+                parent[parentA] = parentB;
+            } else if (rank[parentB] < rank[parentA]) {
+                parent[parentB] = parentA;
+            } else {
+                parent[parentB] = parentA;
+                rank[parentA]++;
+            }
+        }
 
-					•	Union Operation: ￼
-					•	Union by rank/size ensures smaller trees are attached to larger trees, keeping the tree height low.
-					•	Find Operation: ￼
-					•	Path compression flattens the tree structure, making subsequent find operations faster.
+	- Number of Islands, Connected Components, Redundant Connection
+	Worst case Time Complexity:
+		The worst-case time complexity of the Union-Find (Disjoint Set) algorithm depends on how the data structure is implemented. Specifically, the complexity is determined by the techniques used to optimize the operations: path compression and union by rank/size.
 
-				Here:
-					•	is the inverse Ackermann function, which grows extremely slowly.
-					•	For all practical purposes, ￼ for any reasonable value of ￼, even for values as large as ￼.
+		1. Basic Union-Find (No Optimization)
 
-				Overall Complexity (Optimized Implementation)
+			Union Operation: ￼
+			In the worst case, one tree is added as a child of another without considering their sizes or depths, leading to highly unbalanced trees.
+			Find Operation: ￼
+			Without optimization, the find operation might traverse the entire height of an unbalanced tree.
 
-				For ￼ operations (unions or finds) on ￼ elements:
-					•	Time Complexity: ￼
+		2. Optimized Union-Find (with Path Compression and Union by Rank/Size)
 
-				Why is ￼ So Small?
+			Union Operation: ￼
+			Union by rank/size ensures smaller trees are attached to larger trees, keeping the tree height low.
+			Find Operation: ￼
+			Path compression flattens the tree structure, making subsequent find operations faster.
 
-				The Ackermann function, ￼, grows extremely fast, so its inverse grows extremely slowly. The inverse Ackermann function, ￼, is defined as the smallest ￼ such that:
+		Here:
+			is the inverse Ackermann function, which grows extremely slowly.
+			For all practical purposes, ￼ for any reasonable value of ￼, even for values as large as ￼.
 
-				￼
+		Overall Complexity (Optimized Implementation)
 
-				For practical scenarios:
-					•	If ￼, then ￼.
+		For ￼ operations (unions or finds) on ￼ elements:
+			Time Complexity: ￼
 
-				This means that for all real-world applications, the operations are nearly constant time.
+		Why is ￼ So Small?
 
-				Conclusion
+		The Ackermann function, ￼, grows extremely fast, so its inverse grows extremely slowly. The inverse Ackermann function, ￼, is defined as the smallest ￼ such that:
 
-					•	Worst-case Time Complexity (Optimized): ￼ per operation.
-					•	Practical Time Complexity: ￼ per operation due to the small value of ￼.
+		￼
+
+		For practical scenarios:
+			If ￼, then ￼.
+
+		This means that for all real-world applications, the operations are nearly constant time.
+
+		Conclusion
+
+			Worst-case Time Complexity (Optimized): ￼ per operation.
+			Practical Time Complexity: ￼ per operation due to the small value of ￼.
 # Topological Sort
-  Linear ordering of DAG(directed acyclic graph) nodes. Cycle detection: output size < n → cycle.
-  When solving one problem leads to solve other problems
-  Maintain InDegree of each node
-  - Kahn's (BFS): track in-degrees, enqueue 0-in-degree, reduce neighbors on dequeue
-  - DFS: post-order reverse = topo order
-  - Course Schedule: If you can finish all courses given the prerequisites    https://leetcode.com/problems/course-schedule/
-  - Alien Dictionary: Determine the order of characters in an alien language 
-  - Job Scheduling with dependencies
+	Linear ordering of DAG(directed acyclic graph) nodes. Cycle detection: output size < n → cycle.
+	When solving one problem leads to solve other problems
+	Maintain InDegree of each node
+	- Kahn's (BFS): track in-degrees, enqueue 0-in-degree, reduce neighbors on dequeue
+	- DFS: post-order reverse = topo order
+	- Course Schedule: If you can finish all courses given the prerequisites    https://leetcode.com/problems/course-schedule/
+	- Alien Dictionary: Determine the order of characters in an alien language 
+	- Job Scheduling with dependencies
 
 # Tree
   Traversals: Pre/In/Post (DFS), Level-order (BFS)
@@ -297,9 +318,9 @@
   - Diameter: at each node, update global max with (left_depth + right_depth)
 
   AVL Tree (strictly balanced, |balance factor| <= 1):
-    insert: recurse, update height, compute balance = depth(L) - depth(R)
-    if |balance| > 1: rotate (LL→right rotate, RR→left, LR→left-right, RL→right-left)
-    Rotation: (y.left=x; x.right=z) <=> (x.right=y; y.left=z)
+	insert: recurse, update height, compute balance = depth(L) - depth(R)
+	if |balance| > 1: rotate (LL→right rotate, RR→left, LR→left-right, RL→right-left)
+	Rotation: (y.left=x; x.right=z) <=> (x.right=y; y.left=z)
 
 	All nodes should be balanced, do shifting as many at required
 	Node insert(node, key){
@@ -350,16 +371,16 @@
   - Find lower_bound on BIT: https://www.youtube.com/watch?v=nuUspQ7ORXE
   https://codeforces.com/predownloaded/13/45/1345c040329da04363d61ef44be495950fc9ac55.gif
 # Segment Tree
-			Interval scheduling, Range-based statistics, 
-			Used when you need to efficiently perform range queries and updates on an array.
-			Both update and read can be done in O(log n)
-			e.g.
-				Sum of given range for each query 
-					(SegmentTreeNode { int start, end, value; SegmentTreeNode left, right;})
-					Populate segment tree: populate(int[] nums, int start, int end)
-					Update segment tree: update(SegmentTreeNode node, int index, int value)
-					Read Segment tree: rangeQuery(SegmentTreeNode node, int left, int right)
-						check whether current node's start and end is  overlapping totally(value), partially(sum of each child) or partially(0)
+	Interval scheduling, Range-based statistics, 
+	Used when you need to efficiently perform range queries and updates on an array.
+	Both update and read can be done in O(log n)
+	e.g.
+		Sum of given range for each query 
+			(SegmentTreeNode { int start, end, value; SegmentTreeNode left, right;})
+			Populate segment tree: populate(int[] nums, int start, int end)
+			Update segment tree: update(SegmentTreeNode node, int index, int value)
+			Read Segment tree: rangeQuery(SegmentTreeNode node, int left, int right)
+				check whether current node's start and end is  overlapping totally(value), partially(sum of each child) or partially(0)
   Interval scheduling
   Efficiently perform Range queries + point/range updates, O(log n). Build O(n).
   Node: { start, end, value, left, right }
@@ -371,28 +392,28 @@
 
 === MISC PATTERNS ===
   Intervals: sort by start → merge if overlap (curr.end >= next.start), else append
-    - Merge Intervals, Meeting Rooms, Minimum Platforms
+	- Merge Intervals, Meeting Rooms, Minimum Platforms
 
   LIS — O(n log n): maintain increasing 'tails' array; binary search for position
-    - Min Removals for Mountain Array: https://leetcode.com/problems/minimum-number-of-removals-to-make-mountain-array/submissions/1401205256/
+	- Min Removals for Mountain Array: https://leetcode.com/problems/minimum-number-of-removals-to-make-mountain-array/submissions/1401205256/
 
   Number of strictly increasing/decreasing trio: for each middle index, count smaller-left * larger-right.
 
   KMP (pattern matching O(n+m)): build LPS failure function array first
-    - First Occurrence: https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/submissions/1362847216/
+	- First Occurrence: https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/submissions/1362847216/
 
   Manacher's (longest palindromic substring, O(n)):
-    - https://leetcode.com/problems/longest-palindromic-substring/submissions/740439346/
+	- https://leetcode.com/problems/longest-palindromic-substring/submissions/740439346/
 
   Cycle Sort (O(n) time, O(1) space): place each element at its correct index (Swap in the list itself)
-    - First Missing Positive: https://leetcode.com/problems/first-missing-positive/description/
+	- First Missing Positive: https://leetcode.com/problems/first-missing-positive/description/
 	
 
   Linked List:
-    - Nth from end: advance fast ptr n steps ahead, then move both until fast hits end
-    - Floyd's Cycle: slow + fast ptr; meet → cycle. Reset one to head → meet again = cycle start
+	- Nth from end: advance fast ptr n steps ahead, then move both until fast hits end
+	- Floyd's Cycle: slow + fast ptr; meet → cycle. Reset one to head → meet again = cycle start
 	- Detect Cycle, Determine Length of the Cycle, Break the Cycle in the LinkedList
-    - 2D matrix → LL: https://www.geeksforgeeks.org/construct-a-linked-list-from-2d-matrix-iterative-approach/
+	- 2D matrix → LL: https://www.geeksforgeeks.org/construct-a-linked-list-from-2d-matrix-iterative-approach/
 
   Lower Bound: https://leetcode.com/problems/contains-duplicate-iii/submissions/1460979384/
   Celebrity Problem: https://www.geeksforgeeks.org/the-celebrity-problem/
@@ -401,27 +422,27 @@
 
 === DS DESIGN ===
   Min Stack: store (value, currentMin) pairs; peek min in O(1)
-    https://leetcode.com/problems/min-stack/description/
+	https://leetcode.com/problems/min-stack/description/
 
   LRU Cache: HashMap<key, Node> + DoublyLinkedList (MRU at head, LRU at tail)
-    get/put O(1): move accessed node to head; evict tail on overflow
+	get/put O(1): move accessed node to head; evict tail on overflow
 
   LFU Cache: HashMap<key, Node> + HashMap<freq, LinkedHashSet<key>> + minFreq pointer
-    On access: move key to freq+1 bucket, update minFreq accordingly
-    https://leetcode.com/problems/lfu-cache/submissions/1384768686/
+	On access: move key to freq+1 bucket, update minFreq accordingly
+	https://leetcode.com/problems/lfu-cache/submissions/1384768686/
 
   getMinElement:
-    O(log n): AVL tree keyed on values + HashMap<key, treeNode>
-    O(1):     min-heap + HashMap<key, heapIndex> for direct access
+	O(log n): AVL tree keyed on values + HashMap<key, treeNode>
+	O(1):     min-heap + HashMap<key, heapIndex> for direct access
 
 === COMPLEXITY QUICK REF ===
-  Sorting (comparison):  O(n log n)      | BFS/DFS:          O(V+E)
-  Dijkstra:              O((V+E) log V)  | Bellman-Ford:     O(VE)
-  Floyd-Warshall:        O(V^3)          | Kruskal:          O(E log E)
-  Binary Search:         O(log n)        | Union-Find:       O(a(n)) ~= O(1)
-  Segment/Fenwick:       O(log n)        | Build Seg Tree:   O(n)
-  KMP / Z-function:      O(n+m)          | Manacher:         O(n)
-  LIS:                   O(n log n)      | TSP (DP+bitmask): O(2^n * n^2)
+	Sorting (comparison):  O(n log n)      | BFS/DFS:          O(V+E)
+	Dijkstra:              O((V+E) log V)  | Bellman-Ford:     O(VE)
+	Floyd-Warshall:        O(V^3)          | Kruskal:          O(E log E)
+	Binary Search:         O(log n)        | Union-Find:       O(a(n)) ~= O(1)
+	Segment/Fenwick:       O(log n)        | Build Seg Tree:   O(n)
+	KMP / Z-function:      O(n+m)          | Manacher:         O(n)
+	LIS:                   O(n log n)      | TSP (DP+bitmask): O(2^n * n^2)
 
 	
 	Data Structures:
@@ -483,15 +504,15 @@ tree, dp, binary search, oops, virtual, nodejs eventloop, acid, cap, solid, two 
 // Bellman-Ford for max score: store edge cost as negative (minimize = maximize); Vth pass marks neg-cycle reachable nodes as -INF
 	//? c should be stored -ve of what we recieved, as it tries to minimise the score
 	/*
-        if (ans[a] == INF) continue;
-        ans[b] = min(ans[b], c + ans[a]);
-    */
+		if (ans[a] == INF) continue;
+		ans[b] = min(ans[b], c + ans[a]);
+	*/
 	/**
-        if (ans[a] == INF) continue;
-        if (ans[b] > c + ans[a]) {
-                ans[b] = NINF;
-        } 
-    */
+		if (ans[a] == INF) continue;
+		if (ans[b] > c + ans[a]) {
+			ans[b] = NINF;
+		} 
+	*/
 "https://leetcode.com/problems/shortest-path-visiting-all-nodes/submissions/1161056037/",
 // BFS + bitmask; state = (node, visitedMask); shortest path guaranteed by BFS layers
 "https://wentao-shao.gitbook.io/leetcode/toposort/1136.parallel-courses",
@@ -716,7 +737,7 @@ tree, dp, binary search, oops, virtual, nodejs eventloop, acid, cap, solid, two 
 "https://leetcode.com/discuss/interview-experience/5426325/Flipkart-or-SDE-2-or-Backend-or-June-2024",
 "https://leetcode.com/discuss/interview-question/4820505/Google-question/",
 "https://leetcode.com/discuss/interview-question/4314794/GOOGLE-SDE-2-CODING-ROUND-1%3A-Find-the-in-compatible-pair-of-unit-tests/",
-"https://www.codechef.com/viewsolution/1052100771",
+"https://www.codechef.com/viewsolution/1052100771"
 
 	//?string questions
 	// string.replace(pos, len, str);
@@ -729,16 +750,16 @@ tree, dp, binary search, oops, virtual, nodejs eventloop, acid, cap, solid, two 
 	//lower_bound := first element which has a value not less than val
 	//upper_bound := first element which has a value greater than val
 	/*//?
-        while (l <= r) {
-            mid = l + (r - l) / 2; 
-            if (grid[i][mid] < 0) {
-                r = mid - 1; ans = mid;
-            }
-            else {
-                l = mid + 1;
-            }
-        } 
-    */
+		while (l <= r) {
+			mid = l + (r - l) / 2; 
+			if (grid[i][mid] < 0) {
+				r = mid - 1; ans = mid;
+			}
+			else {
+				l = mid + 1;
+			}
+		} 
+	*/
 
 	// vector < int > v, u = { 1, 2, 3};
 	// v=u; works
@@ -750,18 +771,18 @@ tree, dp, binary search, oops, virtual, nodejs eventloop, acid, cap, solid, two 
 	5 (use one coin only once)
 	5, 221, 212, 122, 2111, 1211, 1121, 1112, 11111 (number of ways to reach there)
 
-    int change(int n, vector<int>& coins) {
-        vector<int>dp(n+1,0);
-        dp[0]=1;
-        for(int i=0;i<coins.size();i++){
-            for(int j=0;j<=n;j++){   //? this is for first case (for second case we need to use  j=n;j>-1;j-- )
-                if(j>=coins[i]){
-                    dp[j]+=dp[j-coins[i]];
-                }
-            }
-        }
-        return dp[n];
-    }
+	int change(int n, vector<int>& coins) {
+		vector<int>dp(n+1,0);
+		dp[0]=1;
+		for(int i=0;i<coins.size();i++){
+			for(int j=0;j<=n;j++){   //? this is for first case (for second case we need to use  j=n;j>-1;j-- )
+				if(j>=coins[i]){
+					dp[j]+=dp[j-coins[i]];
+				}
+			}
+		}
+		return dp[n];
+	}
 
 	 j=n;j>-1;j--
 		when we have limited items, then we use this way to avoid repeatition
