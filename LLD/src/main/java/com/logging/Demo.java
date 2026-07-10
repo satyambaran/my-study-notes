@@ -13,6 +13,7 @@ public class Demo {
 
         // --- Named logger for "com.myapp" (file, JSON format, DEBUG+) ---
         Logger appLogger = LoggerFactory.getLogger("com.myapp");
+        
         // Root provides a global default
         appLogger.setLogLevel(LogLevel.WARN); // Only log WARN and above for this logger
         appLogger.addAppender(new FileAppender(new JsonFormatter(), "app.log"));
