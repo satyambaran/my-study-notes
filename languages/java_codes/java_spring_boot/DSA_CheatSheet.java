@@ -34,6 +34,14 @@ public class DSA_CheatSheet {
             Point p = (Point) o;
             return x == p.x && y == p.y;
         }
+
+        // Returns a reusable Comparator — use in TreeMap/TreeSet/sort without
+        // implementing Comparable
+        // Usage: new TreeMap<>(Point.comparator())
+        // points.sort(Point.comparator())
+        static Comparator<Point> comparator() {
+            return Comparator.comparingInt((Point p) -> p.x).thenComparingInt(p -> p.y);
+        }
     }
 
     // ─────────────────────────────────────────────
@@ -361,8 +369,10 @@ public class DSA_CheatSheet {
                 return x.length() - y.length();
             return x.compareTo(y);
         });
-        TreeMap<Point, String> pointName = new TreeMap<>();
+        // TreeMap with non-Comparable key: use Point.comparator()
+        TreeMap<Point, String> pointName = new TreeMap<>(Point.comparator());
         tmap.put(1, "a");
+        tmap.get(1);
         tmap.firstKey(); // smallest key
         tmap.lastKey(); // largest key
         tmap.floorKey(3); // largest key <= 3 (null if none)
@@ -405,6 +415,8 @@ public class DSA_CheatSheet {
                 return x.length() - y.length();
             return x.compareTo(y);
         });
+        // Same pattern: use Point.comparator() for non-Comparable keys
+        TreeMap<Point, Integer> tp = new TreeMap<>(Point.comparator());
         tset.add(5);
         tset.add(3);
         tset.add(8);

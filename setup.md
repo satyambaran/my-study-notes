@@ -1,29 +1,54 @@
-Create a repository on github
+# Weekly Tracker
 
-```
-git init
+**Week:** ____________________ to ____________________
 
-# Add all files
-git add .
+## Daily Habits
 
-# Commit your changes
-git commit -m "Initial commit"
+| Habit | Mon | Tue | Wed | Thu | Fri | Sat | Sun |
+| --------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+| Wake up | | | | | | | |
+| Sleep hours | | | | | | | |
+| Water — 1L (morning) | | | | | | | |
+| Morning exercise | | | | | | | |
+| Breakfast | | | | | | | |
+| Water — 1.5L (pre-lunch) | | | | | | | |
+| Lunch | | | | | | | |
+| Water — 2L (post-lunch) | | | | | | | |
+| Water — 2.5L (pre-gym) | | | | | | | |
+| Gym start | | | | | | | |
+| Gym end | | | | | | | |
+| Water — 2.5L (post-gym) | | | | | | | |
+| Dinner | | | | | | | |
+| Water — 4L (pre-sleep) | | | | | | | |
+| Pushups | | | | | | | |
+| Steps | | | | | | | |
 
-# Add remote repository
-git remote add origin https://github.com/username/repository-name.git
+---
 
-# Rename branch to main (if needed)
-git branch -M main
+## 3 Hardest things I did today
 
-# Push to GitHub
-git push -u origin main
+| Day | #1 | #2 | #3 |
+| ------ | --------- | --------- | --------- |
+| Mon | | | |
+| Tue | | | |
+| Wed | | | |
+| Thu | | | |
+| Fri | | | |
+| Sat | | | |
+| Sun | | | |
 
-# Set your email to GitHub's no-reply email
-git config user.email "satyambaran@users.noreply.github.com"
+---
 
-# Amend your last commit with the new email
-git commit --amend --reset-author --no-edit
+## Weekly Retrospective
 
-# Now push
-git push -u origin main
-```
+### Wins
+
+---
+
+### What slowed me down
+
+---
+
+### Focus for next week
+
+---

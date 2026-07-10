@@ -74,14 +74,13 @@ import java.util.function.UnaryOperator;
  * - ArrayList::new
  *
  * PIPELINE EXAMPLE
- * - names.stream()
+ * names.stream()
  * .filter(name -> name.length() > 3)
  * .map(String::toUpperCase)
  * .sorted()
- * .toList();
+ * .toList()
  */
 public class StreamFunctionalCheatSheet {
-
     public static void main(String[] args) { 
         Function<String, Integer> length = String::length; 
         Predicate<String> longWord = s -> s.length() > 4; // always return boolean
