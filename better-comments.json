@@ -1,7 +1,7 @@
 {
     "editor.tokenColorCustomizations": {
 		"comments": "#c2bdb5" // dark mode
-		// "comments": "#040454" // light mode
+		"comments": "#040454" // light mode
 	},
 	"better-comments.tags": [
 		{

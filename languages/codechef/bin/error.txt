@@ -1,0 +1,6 @@
+Exception in thread "main" java.lang.Error: Unresolved compilation problems: 
+	n cannot be resolved to a variable
+	n cannot be resolved to a variable
+
+	at codechef.Code.solve(Code.java:38)
+	at codechef.Code.main(Code.java:31)

@@ -1,6 +1,5 @@
 package new_notes.shrayansh.lld.src.com.observer;
 
-import java.util.*;
 import com.observer.Observable.Observable;
 import com.observer.Observer.Observer;
 

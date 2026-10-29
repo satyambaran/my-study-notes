@@ -60,22 +60,7 @@
 					~ Local ACID holds, but global transaction is not possible
 						-> solved by SAGA
 		@ SAGA 
-			request -> request+product_id -> request+product_id+payment_info -> request+product_id+payment_info+order_confirmation_id
-			product_deduction payment order confirmation
-			A <--> B <--> C <--> D
-			    : A will call B, B will call C and C will call D
-			What if C fails?
-				~ Then B should rollback its transaction and call A to rollback its transaction
-				~ Then A should rollback its transaction
-			Success scenario:
-				D will report success in global transaction
-			Failure scenario:
-			    A will report failure in global transaction
-
-			
 			: Simple API for Grid Applications
-				~ Each microservice will have its own local transaction
-				~ Global transaction is achieved by sequence of local transactions
 			Sequence of local transaction
 				~ Each service pushes some events for next services
 				~ On failure, service pushes an failure event for previous service to consume and rollback

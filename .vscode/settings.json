@@ -1,3 +1,22 @@
 {
-	"java.compile.nullAnalysis.mode": "automatic"
+	"java.compile.nullAnalysis.mode": "automatic",
+	"java.server.launchMode": "Standard",
+	"java.project.sourcePaths": ["languages/java", "languages/java_codes", "java_codes", "LLD/src", "shrayansh"],
+	"java.project.referencedLibraries": ["lib/**/*.jar"],
+	"java.project.outputPath": "bin",
+	"java.import.projectSelection": "automatic",
+	"java.configuration.updateBuildConfiguration": "automatic",
+	"java.import.exclusions": [
+		"**/node_modules/**",
+		"**/.metadata/**",
+		"**/archetype-resources/**",
+		"**/META-INF/maven/**",
+		"**/projects/**",
+		"**/shrayansh/**"
+	],
+	"java.import.maven.enabled": false,
+	"java.import.gradle.enabled": false,
+	"redhat.telemetry.enabled": false,
+	"problems.decorations.enabled": true,
+	"editor.formatOnSave": true
 }
