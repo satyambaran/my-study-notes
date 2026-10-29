@@ -1,6 +1,7 @@
 package java_spring_boot;
 
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.stream.*;
 
 public class DSA_CheatSheet {
@@ -128,7 +129,7 @@ public class DSA_CheatSheet {
         int[] arr2 = { 1, 2, 3 };
         Arrays.fill(arr, -1); // fill all with -1
         Arrays.sort(arr); // sort ascending O(n log n)
-        Arrays.sort(arr, 1, 5); // sort subarray [1,5)
+        Arrays.sort(arr, 2, 5); // sort subarray [2,5)
         int idx = Arrays.binarySearch(arr, 3); // binary search (must be sorted)
         int[] copy = Arrays.copyOf(arr, arr.length); // copy full
         int[] copy2 = Arrays.copyOfRange(arr, 1, 4); // copy [1,4)
@@ -150,7 +151,7 @@ public class DSA_CheatSheet {
         String str = "Hello World";
         str.length(); // 11
         str.charAt(0); // 'H'
-        str.substring(1, 5); // "ello" [1,5)
+        str.substring(2, 5); // "llo" [2,5)
         str.indexOf("lo"); // 3 (-1 if not found)
         str.lastIndexOf('l'); // 9
         str.contains("World"); // true
@@ -191,7 +192,11 @@ public class DSA_CheatSheet {
         sb.append(' ').append("world"); // chaining
         sb.insert(5, ","); // insert at index
         sb.delete(5, 6); // delete [5,6)
-        sb.deleteCharAt(0);
+        // sb.deleteCharAt(0);
+        // remove last char: sb.setLength(sb.length() - 1);
+        // remove last char
+        sb.append('H');
+        sb.deleteCharAt(sb.length() - 1);
         sb.replace(0, 3, "Hi"); // replace [0,3) with "Hi"
         sb.reverse();
         sb.charAt(0);
@@ -199,9 +204,14 @@ public class DSA_CheatSheet {
         sb.length();
         sb.indexOf("world");
         sb.toString(); // convert to String
+        int[] cnt = new int[10]; // example array for counts
         for (int i = 9; i >= 0; i--) {
-            // sb.append(String.valueOf(i).repeat(cnt[i]));
+            sb.append(String.valueOf(i).repeat(cnt[i]));
         }
+        sb.append(sb.reverse()); // not a palindrome
+        StringBuilder copySb = new StringBuilder(sb);
+        sb.append(copySb.reverse()); // palindrome
+
         // ─────────────────────────────────────────────
         // ARRAYLIST (dynamic array, like vector<int>)
         // ─────────────────────────────────────────────
@@ -374,6 +384,9 @@ public class DSA_CheatSheet {
         tmap.put(1, "a");
         tmap.get(1);
         tmap.firstKey(); // smallest key
+        Entry<Integer, String> entry = tmap.firstEntry(); // smallest key
+        entry.getKey(); // 1
+        entry.getValue(); // "a"
         tmap.lastKey(); // largest key
         tmap.floorKey(3); // largest key <= 3 (null if none)
         tmap.ceilingKey(3); // smallest key >= 3 (null if none)
@@ -384,6 +397,7 @@ public class DSA_CheatSheet {
         tmap.subMap(2, 6); // keys in [2,6)
         tmap.subMap(2, true, 6, true); // keys in [2,6]
         tmap.descendingMap();
+        tmap.remove(tmap.firstKey()); // remove smallest key
         tmap.pollFirstEntry(); // remove + return smallest entry
         tmap.pollLastEntry(); // remove + return largest entry
         touch(tmapDesc, tmapCustom, pointName);
@@ -536,6 +550,8 @@ public class DSA_CheatSheet {
                 .distinct() // remove duplicates
                 .limit(3) // take first 3
                 .collect(Collectors.toList());
+        // nums.stream().sum(); // This line is incorrect, Stream<Integer> does not have
+        // sum() directly
         nums.stream().mapToInt(x -> x).sum();
         nums.stream().mapToInt(x -> x).average().getAsDouble();
         nums.stream().reduce(0, Integer::sum);
@@ -556,6 +572,9 @@ public class DSA_CheatSheet {
         // ─────────────────────────────────────────────
         // int[] <-> List<Integer>
         int[] primitive = { 1, 2, 3 };
+        // OptionalInt k = Arrays.stream(primitive).max(); // max of int[]
+        // are mapToInt(x->x) and boxed() opposite of each other? Yes, mapToInt converts
+        // to IntStream, and boxed() converts IntStream to Stream<Integer>.
         List<Integer> boxedList = Arrays.stream(primitive).boxed().collect(Collectors.toList());
         int[] backToPrimitive = boxedList.stream().mapToInt(x -> x).toArray();
         // char[] <-> String
@@ -568,5 +587,98 @@ public class DSA_CheatSheet {
         Integer boxedInt = 5; // auto-box
         int primInt = boxedInt; // auto-unbox
         touch(backToPrimitive, fromChars, fromInt, fromStr, primInt);
+
+        // gcd(a,b) => b==0?a:gcd(b, a%b)
+    }
+}
+
+class TreeMapCustom<I, O> extends TreeMap<I, O> {
+    public TreeMapCustom() {
+        super();
+    }
+
+    public TreeMapCustom(Comparator<? super I> comparator) {
+        super(comparator);
+    }
+
+    public O floorValue(I i) {
+        Map.Entry<I, O> entry = floorEntry(i);
+        return entry == null ? null : entry.getValue();
+    }
+
+    public int maxNonOverlapping(int[] nums, int target) {
+        int n = nums.length;
+        int[] sum = new int[n + 1];
+        sum[0] = 0;
+        HashMap<Integer, Integer> prev = new HashMap<>();
+        TreeMap<Integer, Integer> range = new TreeMap<>();
+        range.put(-1, -1);
+        for (int i = 0; i < n; i++) {
+            sum[i + 1] = sum[i] + nums[i];
+            if (prev.containsKey(sum[i + 1])) {
+                int idx = prev.get(sum[i + 1]);
+                int floor = range.floorKey(idx);
+                // [idx, i]
+                SortedSet<Integer> set = range.subSet(floor, i);
+                boolean flag = false;
+                for (Integer cur : set) {
+                    if (range.get(cur) > idx) {
+                        flag = true;
+                        break;
+                    }
+                }
+                if (flag) {
+                    prev.put(sum[i + 1], i);
+                } else {
+                    range.put(idx, i);
+                    prev.remove(sum[i + 1]);
+                }
+            } else {
+                prev.put(sum[i + 1], i);
+            }
+        }
+        return range.size();
+    }
+
+    boolean solve(String src, String dest, String[] srcs, String[] dests, int[] dep, int[] arr) {
+        PriorityQueue<Travel> q = new PriorityQueue<>((x, y) -> x.arr - y.arr);
+
+        HashMap<String, List<Travel>> paths = new HashMap<>();
+        for (int i = 0; i < srcs.length; i++) {
+            List<Travel> cur = paths.getOrDefault(srcs[i], new ArrayList<>());
+            cur.add(new Travel(srcs[i], dests[i], dep[i], arr[i]));
+            paths.put(srcs[i], cur);
+        }
+        q.add(new Travel("null", src, -1, 0));
+        HashMap<String, Integer> dist = new HashMap<>();
+        while (!q.isEmpty()) {
+            Travel cur = q.poll();
+            if (dist.getOrDefault(cur.dest, Integer.MAX_VALUE) <= cur.arr) {
+                continue;
+                // already optimised
+            }
+            if (cur.dest.equals(dest))
+                return true;
+            dist.put(cur.dest, cur.arr);
+            for (Travel neigh : paths.getOrDefault(cur.dest, new ArrayList<>())) {
+                if (cur.arr <= neigh.dep && dist.getOrDefault(neigh.dest, Integer.MAX_VALUE) > neigh.arr) {
+                    q.add(neigh);
+                }
+            }
+        }
+        return dist.get(dest) != null;
+    }
+}
+
+class Travel {
+    String src, dest;
+    int dep, arr;
+
+    Travel(String src, String dest,
+            int dep, int arr) {
+        this.arr = arr;
+        this.dep = dep;
+        this.dest = dest;
+        this.src = src;
     }
 }

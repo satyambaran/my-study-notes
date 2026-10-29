@@ -1,10 +1,12 @@
 # DSA Interview — Last Minute Cheat Sheet
 
 ## Structure
+
 Each section follows: pattern name → when to use → key idea → skeleton approach.
 Common questions show: problem type → core pattern → critical decision → time/space.
 
 ## Purpose
+
 Rapid revision for DSA interviews. Assumes basic data structure knowledge. Covers patterns, approaches, and popular question types.
 
 ---
@@ -24,6 +26,7 @@ Amortized    : "Expensive rarely, cheap usually" — ArrayList resize, Union-Fin
 ```
 
 **Space complexity triggers:**
+
 ```
 O(1) extra    : In-place sort, two pointers, bit manipulation
 O(n)          : HashMap, recursion stack, DP 1D array, queue/stack
@@ -35,7 +38,9 @@ O(n²)         : 2D DP table, adjacency matrix
 ## 2. Algorithmic Patterns
 
 ### Sliding Window
+
 **Trigger:** contiguous subarray/substring, max/min window, "at most K distinct"
+
 ```
 Fixed window: maintain window of size k, slide right, update result
 Variable window: expand right until invalid, shrink left until valid again
@@ -53,7 +58,9 @@ for (int right = 0; right < n; right++) {
 ```
 
 ### Two Pointers
+
 **Trigger:** sorted array, pair sum, remove duplicates, palindrome, merge sorted
+
 ```
 Opposite ends: left=0, right=n-1, move inward based on condition
 Same direction: slow/fast for cycle detection, in-place removal
@@ -69,7 +76,9 @@ while (left < right) {
 ```
 
 ### Fast & Slow Pointers
+
 **Trigger:** cycle detection, middle of linked list, happy number
+
 ```
 slow moves 1 step, fast moves 2 steps
 If cycle: they meet inside cycle
@@ -84,7 +93,9 @@ while (fast != null && fast.next != null) {
 ```
 
 ### Binary Search
+
 **Trigger:** sorted array, monotonic condition, "min/max that satisfies X", search space reduction
+
 ```
 Classic: find target in sorted array
 On answer: binary search on the answer space (min/max optimization)
@@ -111,7 +122,9 @@ return lo;
 ```
 
 ### BFS (Breadth-First Search)
+
 **Trigger:** shortest path (unweighted), level-order, minimum steps, nearest X
+
 ```
 Queue-based, processes level by level
 Guaranteed shortest path in unweighted graphs
@@ -137,7 +150,9 @@ while (!q.isEmpty()) {
 ```
 
 ### DFS (Depth-First Search)
+
 **Trigger:** paths, connectivity, cycle detection, topological sort, backtracking, island counting
+
 ```
 Stack-based (or recursion), goes deep before wide
 Use for: all paths, connected components, tree traversals
@@ -155,7 +170,9 @@ void dfs(Node node, Set<Node> visited) {
 ```
 
 ### Backtracking
+
 **Trigger:** "generate all", permutations, combinations, subsets, N-Queens, Sudoku, word search
+
 ```
 Try a choice → recurse → undo the choice (backtrack)
 
@@ -173,7 +190,9 @@ void backtrack(state, choices, result) {
 ```
 
 ### Dynamic Programming
+
 **Trigger:** "count ways", "min/max cost", "can you achieve X", overlapping subproblems, optimal substructure
+
 ```
 1. Define state: dp[i] = answer for subproblem i
 2. Recurrence: dp[i] = f(dp[i-1], dp[i-2], ...)
@@ -199,7 +218,9 @@ for (int i = 2; i <= n; i++)
 ```
 
 ### Greedy
+
 **Trigger:** locally optimal → globally optimal, interval scheduling, Huffman, activity selection
+
 ```
 Make the best choice at each step, never revisit
 
@@ -212,7 +233,9 @@ Common greedy strategies:
 ```
 
 ### Monotonic Stack / Queue
+
 **Trigger:** "next greater element", "previous smaller", "max in sliding window", histogram area
+
 ```
 Stack maintains monotonic order (increasing or decreasing)
 Pop when current element breaks the monotonic property
@@ -276,7 +299,9 @@ for (int i = 0; i < n; i++) {
 ```
 
 ### Prefix Sum / Difference Array
+
 **Trigger:** range sum queries, subarray sum equals K, range updates
+
 ```
 prefix[i] = sum(arr[0..i-1])
 sum(l..r) = prefix[r+1] - prefix[l]
@@ -293,7 +318,9 @@ for (int num : arr) {
 ```
 
 ### Union-Find (Disjoint Set)
+
 **Trigger:** "are they connected?", connected components, cycle detection in undirected graph, Kruskal's MST
+
 ```
 int[] parent, rank;
 int find(int x) {
@@ -311,7 +338,9 @@ void union(int x, int y) {
 ```
 
 ### Topological Sort
+
 **Trigger:** dependency ordering, course schedule, build order, DAG processing
+
 ```
 // Kahn's algorithm (BFS-based)
 int[] inDegree = new int[n];
@@ -331,7 +360,9 @@ if (order.size() != n) → cycle exists (no valid ordering)
 ```
 
 ### Trie (Prefix Tree)
+
 **Trigger:** autocomplete, prefix matching, word search, longest common prefix, dictionary problems
+
 ```
 class TrieNode {
     TrieNode[] children = new TrieNode[26];
@@ -345,7 +376,9 @@ startsWith: walk nodes, return true if path exists
 ```
 
 ### Bit Manipulation
+
 **Trigger:** single number, power of 2, counting bits, XOR tricks, subsets via bitmask
+
 ```
 n & (n-1)        → removes lowest set bit (power of 2 check: n & (n-1) == 0)
 n & (-n)         → isolates lowest set bit
@@ -405,6 +438,7 @@ Integer.bitCount(n) → count set bits (popcount)
 ```
 
 **During problem solving:**
+
 ```
 - Talk through your thinking — silence is bad
 - State time + space complexity BEFORE coding
@@ -425,13 +459,13 @@ Need fast insert/delete at both ends?    → Deque (ArrayDeque)
 Need FIFO?                               → Queue (LinkedList / ArrayDeque)
 Need LIFO?                               → Stack (ArrayDeque — avoid Stack class)
 Need sorted + fast min/max extraction?   → PriorityQueue (Heap) O(log n)
-Need fast contains check?               → HashSet O(1)
-Need sorted unique elements?            → TreeSet O(log n)
+Need fast contains check?                → HashSet O(1)
+Need sorted unique elements?             → TreeSet O(log n)
 Need indexed access + fast append?       → ArrayList O(1) amortized
 Need fast insert/delete in middle?       → LinkedList O(1) at pointer (but O(n) find)
 Need frequency count?                    → HashMap<T, Integer> or int[]
 Need range sum queries?                  → Prefix sum array or Segment Tree
-Need dynamic connectivity?              → Union-Find
+Need dynamic connectivity?               → Union-Find
 ```
 
 ---
@@ -441,6 +475,7 @@ Need dynamic connectivity?              → Union-Find
 ### Arrays
 
 **Two Sum**
+
 ```
 Pattern: HashMap (complement lookup)
 Map<Integer, Integer> map = new HashMap<>(); // val → index
@@ -449,6 +484,7 @@ Time: O(n), Space: O(n)
 ```
 
 **Three Sum**
+
 ```
 Pattern: Sort + Two Pointers
 Sort array. For each i, use two pointers (i+1, n-1) to find pairs summing to -arr[i]
@@ -457,6 +493,7 @@ Time: O(n²), Space: O(1) extra
 ```
 
 **Maximum Subarray (Kadane's)**
+
 ```
 Pattern: DP / Greedy
 maxEndingHere = max(num, maxEndingHere + num);
@@ -466,6 +503,7 @@ Key: reset running sum when it goes negative
 ```
 
 **Merge Intervals**
+
 ```
 Pattern: Sort by start + linear merge
 Sort by interval[0]. Merge if curr.start <= prev.end: prev.end = max(prev.end, curr.end)
@@ -473,6 +511,7 @@ Time: O(n log n), Space: O(n)
 ```
 
 **Product of Array Except Self**
+
 ```
 Pattern: Prefix + Suffix products
 left[i] = product of all left of i; right[i] = product of all right of i
@@ -481,6 +520,7 @@ Time: O(n), Space: O(1) extra (output not counted)
 ```
 
 **Trapping Rain Water**
+
 ```
 Pattern: Two Pointers or Prefix Max
 water[i] = min(leftMax[i], rightMax[i]) - height[i]
@@ -493,6 +533,7 @@ Time: O(n), Space: O(1) with two pointers
 ### Strings
 
 **Valid Anagram**
+
 ```
 Pattern: Frequency count (int[26] or HashMap)
 Count chars in s1, decrement for s2, all counts should be 0
@@ -500,6 +541,7 @@ Time: O(n), Space: O(1) — fixed 26 chars
 ```
 
 **Longest Substring Without Repeating Characters**
+
 ```
 Pattern: Sliding Window + HashSet/HashMap
 Expand right, if duplicate found → shrink left until removed
@@ -508,6 +550,7 @@ Time: O(n), Space: O(min(n, charset))
 ```
 
 **Longest Palindromic Substring**
+
 ```
 Pattern: Expand Around Center
 For each center (and each gap between chars): expand while chars match
@@ -517,6 +560,7 @@ Time: O(n²), Space: O(1)
 ```
 
 **Group Anagrams**
+
 ```
 Pattern: HashMap with sorted-string key
 Key = sorted chars of word; Value = list of words
@@ -525,6 +569,7 @@ Time: O(n × k log k), Space: O(n × k)
 ```
 
 **KMP — Pattern Matching**
+
 ```
 Pattern: Precompute LPS array (Longest Proper Prefix = Suffix), then match without re-scanning text
 Time: O(n + m), Space: O(m)
@@ -550,6 +595,7 @@ while (i < n) {
 ```
 
 **Manacher's — Longest Palindromic Substring O(n)**
+
 ```
 Pattern: Insert '#' between chars to handle even-length, track rightmost palindrome boundary
 Time: O(n), Space: O(n)
@@ -574,6 +620,7 @@ for (int i = 1; i < t.length - 1; i++) {
 ### Linked Lists
 
 **Reverse Linked List**
+
 ```
 Pattern: Iterative with 3 pointers (prev, curr, next)
 while (curr != null) { next = curr.next; curr.next = prev; prev = curr; curr = next; }
@@ -582,6 +629,7 @@ Time: O(n), Space: O(1)
 ```
 
 **Detect Cycle**
+
 ```
 Pattern: Fast & Slow Pointers (Floyd's)
 slow=head, fast=head; move slow 1, fast 2
@@ -590,6 +638,7 @@ Time: O(n), Space: O(1)
 ```
 
 **Merge Two Sorted Lists**
+
 ```
 Pattern: Dummy head + iterate
 dummy = new Node(0); tail = dummy;
@@ -598,6 +647,7 @@ Time: O(n + m), Space: O(1)
 ```
 
 **LRU Cache**
+
 ```
 Pattern: HashMap + Doubly Linked List
 HashMap<key, Node> for O(1) lookup; DLL for O(1) insert/remove at ends
@@ -610,6 +660,7 @@ Time: O(1) for both get and put
 ### Trees
 
 **Tree Traversals**
+
 ```
 Inorder (L-Root-R): gives sorted order for BST
 Preorder (Root-L-R): serialize tree, copy tree
@@ -619,6 +670,7 @@ Level order: BFS with queue, process by level
 ```
 
 **Maximum Depth**
+
 ```
 Pattern: DFS recursion
 return (root == null) ? 0 : 1 + max(depth(left), depth(right));
@@ -626,6 +678,7 @@ Time: O(n), Space: O(h) — h = height
 ```
 
 **Validate BST**
+
 ```
 Pattern: DFS with min/max bounds
 isValid(node, min, max): node.val must be in (min, max)
@@ -635,12 +688,14 @@ Time: O(n), Space: O(h)
 ```
 
 **Lowest Common Ancestor (BST)**
+
 ```
 If both values < node → go left; both > node → go right; else → current is LCA
 Time: O(h)
 ```
 
 **Lowest Common Ancestor (Binary Tree)**
+
 ```
 Pattern: DFS recursion
 If root is null or matches p or q → return root
@@ -649,6 +704,7 @@ Time: O(n)
 ```
 
 **Diameter of Binary Tree**
+
 ```
 Pattern: DFS, track max(leftHeight + rightHeight) at each node
 diameter = max(diameter, leftH + rightH);
@@ -657,6 +713,7 @@ Time: O(n)
 ```
 
 **Serialize / Deserialize**
+
 ```
 Pattern: Preorder DFS with "null" markers, or BFS level-order
 Serialize: root,left,right with "X" for null
@@ -668,6 +725,7 @@ Deserialize: read values, recursively build left then right
 ### Graphs
 
 **Number of Islands**
+
 ```
 Pattern: DFS/BFS on grid, mark visited by setting '1' → '0'
 For each unvisited '1': start DFS, count++
@@ -675,6 +733,7 @@ Time: O(m × n), Space: O(m × n) worst case stack
 ```
 
 **Course Schedule (Cycle Detection)**
+
 ```
 Pattern: Topological Sort (Kahn's BFS) or DFS with coloring
 If topo sort processes all nodes → no cycle → can finish
@@ -683,6 +742,7 @@ Time: O(V + E)
 ```
 
 **Dijkstra's Algorithm**
+
 ```
 Pattern: BFS with PriorityQueue (min-heap)
 dist[] initialized to INF; dist[src] = 0
@@ -693,6 +753,7 @@ Time: O((V + E) log V) with binary heap
 ```
 
 **Clone Graph**
+
 ```
 Pattern: DFS/BFS + HashMap<Original, Clone>
 For each node: create clone, recursively clone neighbors
@@ -705,6 +766,7 @@ Time: O(V + E)
 ### Dynamic Programming — Common Patterns
 
 **0/1 Knapsack**
+
 ```
 dp[i][w] = max value using items 0..i with capacity w
 dp[i][w] = max(dp[i-1][w], dp[i-1][w-wt[i]] + val[i])  // skip or take
@@ -713,6 +775,7 @@ Time: O(n × W), Space: O(W)
 ```
 
 **Longest Common Subsequence (LCS)**
+
 ```
 dp[i][j] = LCS length of s1[0..i-1] and s2[0..j-1]
 if s1[i-1] == s2[j-1]: dp[i][j] = dp[i-1][j-1] + 1
@@ -721,6 +784,7 @@ Time: O(m × n), Space: O(m × n) → optimize to O(min(m,n))
 ```
 
 **Longest Increasing Subsequence (LIS)**
+
 ```
 O(n²): dp[i] = length of LIS ending at i; dp[i] = max(dp[j]+1) for j < i where arr[j] < arr[i]
 O(n log n): maintain tails[] array, binary search for insertion point
@@ -728,6 +792,7 @@ Time: O(n log n) with patience sorting
 ```
 
 **Coin Change**
+
 ```
 dp[amount] = min coins to make amount
 dp[0] = 0; for each coin: dp[a] = min(dp[a], dp[a - coin] + 1)
@@ -735,6 +800,7 @@ Time: O(amount × coins), Space: O(amount)
 ```
 
 **House Robber**
+
 ```
 dp[i] = max(dp[i-1], dp[i-2] + nums[i])  // skip or rob current
 Can optimize to 2 variables (prev1, prev2)
@@ -742,6 +808,7 @@ Time: O(n), Space: O(1)
 ```
 
 **Edit Distance**
+
 ```
 dp[i][j] = min ops to convert s1[0..i-1] to s2[0..j-1]
 if match: dp[i][j] = dp[i-1][j-1]
@@ -754,6 +821,7 @@ Time: O(m × n)
 ### Heap / Priority Queue
 
 **Kth Largest Element**
+
 ```
 Pattern: Min-heap of size K
 Add elements, if size > k → poll. Top of heap = kth largest
@@ -762,6 +830,7 @@ Alternative: Quickselect — O(n) average, O(n²) worst
 ```
 
 **Merge K Sorted Lists**
+
 ```
 Pattern: Min-heap holding one node per list
 Poll smallest, add its next to heap
@@ -769,6 +838,7 @@ Time: O(N log k) where N = total elements, k = lists
 ```
 
 **Top K Frequent Elements**
+
 ```
 Pattern: HashMap (frequency) + Min-heap of size K (or Bucket Sort for O(n))
 Bucket sort: buckets[freq] = list of elements with that freq; iterate from high to low
@@ -776,6 +846,7 @@ Time: O(n) with bucket sort, O(n log k) with heap
 ```
 
 **Median of Data Stream**
+
 ```
 Pattern: Two heaps — maxHeap (lower half) + minHeap (upper half)
 Balance: sizes differ by at most 1

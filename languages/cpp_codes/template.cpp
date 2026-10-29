@@ -1,15 +1,15 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#define int long long
-#define pd pair<int, int>
-#define ar array
-#define pii pair<int, int>
-#define mp make_pair
+#define int    long long
+#define pd     pair<int, int>
+#define ar     array
+#define pii    pair<int, int>
+#define mp     make_pair
 #define all(a) a.begin(), a.end()
 const int maxn = 100002, maxt = 100002, mod = 1000000007;
-int di[4] = {0, 1, 0, -1};
-int dj[4] = {1, 0, -1, 0};
+int di[4]  = {0, 1, 0, -1};
+int dj[4]  = {1, 0, -1, 0};
 int did[8] = {0, 1, 0, -1, 1, 1, -1, -1};
 int djd[8] = {1, 0, -1, 0, 1, -1, 1, -1};
 // int dp[maxt], ans[6 * maxt];
@@ -23,9 +23,40 @@ bool isValid(int i, int j, vector<string>& v) {
 void solve() {
     cin >> t;
     while (t--) {
-        
+        cin >> n >> k;
+        cin >> str;
+        vector<int> v;
+        map<int, int> mp;
+        map<int, int> tot;
+        for (int i = 0; i < n; i++) {
+            cin >> a;
+            v.push_back(a);
+            mp[a]++;
+        }
+        sort(v.begin(), v.end());
+        int reached = mp.begin()->first;
+        for (auto& cur : mp) {
+            int sum = 0;
+            if (reached >= cur.first) sum = reached - cur.first;
+            for (int j = 0; j < cur.second; j++) {
+                tot[sum + j]++;
+            }
+            reached = cur.first + sum + cur.second;
+        }
+        if (tot.count(0)) tot.erase(0);
+        int cnt = 0;
+        while (!tot.empty()) {
+            auto cur = tot.rbegin();
+            for (int i = 0; i < k; i++) {
+                cnt = max(cnt, cur->second);
+                cur++;
+            }
+        }
     }
+    // 1 1 1 2 2 2 2 2 2  10
+    // 1 2 3 4 5 6 7 8 9
 }
+
 // #define ONLINE_JUDGE
 int32_t main() {
     ios_base::sync_with_stdio(false);

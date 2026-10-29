@@ -1,4 +1,6 @@
 /*
+HLD quick revision: https://www.youtube.com/watch?v=iYIjJ7utdDI
+
 === RESOURCES ===
   OS Notes:         https://leetcode.com/discuss/interview-question/operating-system/6067720/operating-system-last-minutes-notes
   Java Concurrency: https://github.com/LeonardoZ/java-concurrency-patterns
@@ -45,13 +47,13 @@
   When: answer is easy if you knew the answer to a smaller sub-problem. 
   Identify: optimal substructure + overlapping subproblems.
 
-  Top-Down (Memoization): recurse + cache
+  ` Top-Down (Memoization): recurse + cache
 	Recursively break it down to smaller subproblems and store the results to use it later whenever it's required again
 	~ Definitely solves the smaller problems first, but it's WHILE solving the bigger problems
 	Avoid redundant repetitive calculations using Memoization
 	- Fibonacci, Climbing Stairs, 0/1 Knapsack
 	- Mountain Range: https://cses.fi/problemset/result/16683972/
-  Bottom-Up (Tabulation): fill table iteratively, small → large
+  ` Bottom-Up (Tabulation): fill table iteratively, small → large
 	Build up the solution from smallest unit first iteratively by solving all the subproblems first
 	~ Need to solve the sub-problems first to solve the bigger problem later
 	- Longest Common Subsequence (LCS), Coin Change, Edit Distance
@@ -99,7 +101,8 @@
   - Huffman Coding
   - Buy & Sell Stock:      https://leetcode.com/problems/best-time-to-buy-and-sell-stock/submissions/1339882022/
   - Frog Jump II (tricky — greedy not obvious)(skipped greedy): https://leetcode.com/problems/frog-jump-ii/submissions/1468106726/
-
+  - https://leetcode.com/problems/ugly-number-ii/submissions/2115532048/
+  - https://leetcode.com/problems/product-of-array-except-self/
 # Greedy + Heap (Priority Queue)
   Always process the min/max element next
   - Kth Largest Elements in an array
@@ -129,7 +132,7 @@
 	Fix start, extend end; reset start = end+1 when condition breaks.
 	- Maximum Subarray: Find the contiguous subarray with the largest sum
 	- Gas Station: https://leetcode.com/problems/gas-station/submissions/1401255598/
-
+	- https://leetcode.com/problems/maximum-number-of-non-overlapping-subarrays-with-sum-equals-target/
   * Sliding Window (fixed-size window, L and R stay distance k apart):
 	- Maximum Sum Subarray of size k: Find the subarray with the maximum sum
 	- Permutation in String: https://leetcode.com/problems/permutation-in-string/submissions/1462653829/
@@ -154,7 +157,9 @@
 	Maintain strictly increasing or decreasing elements in a stack.
 	When: next/previous greater/smaller element for each index.
 	- Next Greater Element, Daily Temperatures
-	- Largest Rectangle in Histogram: Find the largest rectangle in a histogramhttps://leetcode.com/problems/largest-rectangle-in-histogram/submissions/1378082792/
+	- Largest Rectangle in Histogram: 
+		Find the largest rectangle in a histogram(combo of monotonic stack + kadane's)
+		https://leetcode.com/problems/largest-rectangle-in-histogram/submissions/1378082792/
 	- Car Fleet: https://leetcode.com/problems/car-fleet/
 
 # Monotonic Deque
@@ -236,7 +241,8 @@
 	find(x):    if par[x]!=x → par[x]=find(par[x]); return par[x]   // path compression
 	union(x,y): par[find(y)] = find(x)                               // union by rank for O(a(n))
 	Complexity: O(a(n)) ~= O(1) per op (a = inverse Ackermann, <= 4 for any practical n)
-				Kruskal’s Algorithm: Find the Minimum Spanning Tree of a graph.
+	
+	Kruskal’s Algorithm: Find the Minimum Spanning Tree of a graph.
 	- Kruskal's MST: 
 		Sort edges by weight in non-decreasing order, 
 		Pick the smallest edge and greedily add if no cycle (use union-find check). 

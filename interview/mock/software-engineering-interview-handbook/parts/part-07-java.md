@@ -29,7 +29,7 @@ and conflating the two is a common source of subtly wrong answers.
   ClassLoader   (Bootstrap -> Platform -> Application, parent-delegation)
         v
   +--------------------- JVM Runtime Data Areas ----------------------+
-  |  Method Area / Metaspace ..... class metadata, static fields       |
+  |  Method Area / Metaspace ...... class metadata, static fields       |
   |  Heap ......................... objects (Collections, HashMap,     |
   |                                  ConcurrentHashMap entries live     |
   |                                  here; reclaimed by Garbage         |

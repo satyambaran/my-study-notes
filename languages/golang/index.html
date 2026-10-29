@@ -1,0 +1,1358 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A crisp, interview-focused Go refresher: fundamentals, concurrency, internals, production patterns, testing, and modern Go through 1.27.">
+  <title>Go Interview Field Guide</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07110f;
+      --panel: #0d1a17;
+      --panel-2: #12231f;
+      --ink: #e7f4ef;
+      --muted: #92aaa2;
+      --line: #254139;
+      --accent: #4ee0a1;
+      --accent-2: #72c8ff;
+      --warn: #ffc768;
+      --danger: #ff8f91;
+      --code: #071714;
+      --shadow: 0 20px 60px rgba(0,0,0,.28);
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    html[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f5f8f5;
+      --panel: #ffffff;
+      --panel-2: #edf5f1;
+      --ink: #10251f;
+      --muted: #586f67;
+      --line: #ceddd6;
+      --accent: #087d54;
+      --accent-2: #086aa3;
+      --warn: #9b6200;
+      --danger: #b73d45;
+      --code: #eef6f2;
+      --shadow: 0 20px 60px rgba(30,60,48,.10);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 70% -10%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 34rem),
+        var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.62;
+    }
+    a { color: var(--accent-2); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    button, input { font: inherit; }
+    code, pre { font-family: var(--mono); }
+    code { color: var(--accent); font-size: .9em; }
+    pre {
+      position: relative;
+      overflow: auto;
+      margin: 14px 0 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--code);
+      color: var(--ink);
+      font-size: .84rem;
+      line-height: 1.55;
+      tab-size: 4;
+    }
+    pre code { color: inherit; font-size: inherit; }
+    .copy-code {
+      position: absolute; top: 8px; right: 8px; z-index: 2;
+      padding: 4px 9px; border: 1px solid var(--line); border-radius: 7px;
+      background: var(--panel-2); color: var(--muted); cursor: pointer;
+      font: 11px var(--mono); opacity: .82;
+    }
+    .copy-code:hover { color: var(--accent); border-color: var(--accent); opacity: 1; }
+    .kw { color: #f69ad1; }
+    .ty { color: var(--accent-2); }
+    .fn { color: #ffd27d; }
+    .cm { color: var(--muted); }
+    .st { color: #a9df8a; }
+    .progress {
+      position: fixed; z-index: 80; inset: 0 auto auto 0;
+      width: 0; height: 3px; background: var(--accent);
+    }
+    .topbar {
+      position: sticky; z-index: 70; top: 0;
+      display: flex; align-items: center; gap: 12px;
+      min-height: 64px; padding: 10px clamp(16px, 4vw, 54px);
+      border-bottom: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
+      background: color-mix(in srgb, var(--bg) 84%, transparent);
+      backdrop-filter: blur(18px);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: max-content; font-weight: 800; letter-spacing: -.02em; }
+    .gopher-mark { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--accent); border-radius: 9px; color: var(--accent); font: 800 13px var(--mono); }
+    .search-wrap { position: relative; flex: 1; max-width: 620px; margin-inline: auto; }
+    .search-wrap input {
+      width: 100%; padding: 9px 42px 9px 38px;
+      border: 1px solid var(--line); border-radius: 10px;
+      outline: none; background: var(--panel); color: var(--ink);
+    }
+    .search-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+    .search-icon { position: absolute; left: 13px; top: 9px; color: var(--muted); }
+    .key { position: absolute; right: 9px; top: 8px; padding: 1px 7px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font: 12px var(--mono); }
+    .icon-button {
+      min-width: 40px; min-height: 40px; padding: 7px 10px;
+      border: 1px solid var(--line); border-radius: 9px;
+      background: var(--panel); color: var(--ink); cursor: pointer;
+    }
+    .icon-button:hover { border-color: var(--accent); color: var(--accent); }
+    .layout { display: grid; grid-template-columns: 250px minmax(0, 920px); gap: clamp(30px, 5vw, 78px); max-width: 1290px; margin: 0 auto; padding: 0 clamp(18px, 4vw, 52px) 90px; }
+    .sidebar { position: sticky; top: 86px; align-self: start; height: calc(100vh - 106px); overflow: auto; padding: 26px 8px 50px 0; }
+    .sidebar p { margin: 0 0 10px; color: var(--muted); font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .sidebar a { display: block; padding: 7px 10px; border-left: 2px solid transparent; color: var(--muted); text-decoration: none; font-size: .84rem; }
+    .sidebar a:hover, .sidebar a.active { border-left-color: var(--accent); color: var(--ink); background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 9%, transparent), transparent); }
+    main { min-width: 0; }
+    .hero { padding: clamp(56px, 9vw, 112px) 0 52px; }
+    .eyebrow { margin: 0 0 16px; color: var(--accent); font: 700 .78rem var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    h1 { max-width: 780px; margin: 0; font-size: clamp(2.9rem, 8vw, 6.4rem); line-height: .95; letter-spacing: -.075em; }
+    .hero .lede { max-width: 700px; margin: 28px 0 0; color: var(--muted); font-size: clamp(1.05rem, 2vw, 1.25rem); }
+    .hero-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 30px; }
+    .stat { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--panel) 86%, transparent); }
+    .stat strong { display: block; color: var(--accent); font: 700 1.15rem var(--mono); }
+    .stat span { color: var(--muted); font-size: .78rem; }
+    .notice { margin-top: 24px; padding: 14px 16px; border-left: 3px solid var(--warn); border-radius: 0 9px 9px 0; background: color-mix(in srgb, var(--warn) 8%, transparent); color: var(--muted); font-size: .9rem; }
+    .notice strong { color: var(--ink); }
+    .micro { color: var(--muted); font-size: .85rem; }
+    .chapter { padding: 48px 0; border-top: 1px solid var(--line); }
+    .chapter[hidden] { display: none; }
+    .chapter-head { display: grid; grid-template-columns: 56px 1fr; gap: 18px; align-items: start; margin-bottom: 26px; }
+    .chapter-no { color: var(--accent); font: 700 .82rem var(--mono); padding-top: 9px; }
+    h2 { margin: 0; font-size: clamp(1.75rem, 4vw, 2.65rem); line-height: 1.08; letter-spacing: -.045em; }
+    h3 { margin: 28px 0 10px; font-size: 1.12rem; letter-spacing: -.02em; }
+    h4 { margin: 0 0 7px; font-size: .97rem; }
+    p { margin: 9px 0; }
+    .summary { max-width: 740px; margin: 9px 0 0; color: var(--muted); }
+    .grid-2, .grid-3 { display: grid; gap: 12px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card { padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+    .card p, .card li { color: var(--muted); font-size: .9rem; }
+    .card p:last-child { margin-bottom: 0; }
+    .card.accent { border-top: 2px solid var(--accent); }
+    .card.warn { border-top: 2px solid var(--warn); }
+    .tag { display: inline-block; margin: 2px 4px 2px 0; padding: 2px 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font: 11px var(--mono); }
+    ul, ol { padding-left: 1.25rem; }
+    li { margin: 5px 0; }
+    .tight li { margin: 2px 0; }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+    th, td { padding: 11px 13px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--accent); background: var(--panel-2); font: 700 .75rem var(--mono); text-transform: uppercase; letter-spacing: .04em; }
+    tr:last-child td { border-bottom: 0; }
+    td { color: var(--muted); }
+    td:first-child { color: var(--ink); white-space: nowrap; }
+    details { margin: 10px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+    summary { cursor: pointer; padding: 15px 18px; color: var(--ink); font-weight: 700; list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; float: right; color: var(--accent); font: 700 1.1rem var(--mono); }
+    details[open] summary::after { content: "−"; }
+    details[open] summary { border-bottom: 1px solid var(--line); }
+    .details-body { padding: 5px 18px 18px; color: var(--muted); }
+    .callout { margin: 18px 0; padding: 15px 17px; border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--line)); border-radius: 10px; background: color-mix(in srgb, var(--accent) 6%, transparent); }
+    .callout strong { color: var(--accent); }
+    .danger { border-color: color-mix(in srgb, var(--danger) 48%, var(--line)); background: color-mix(in srgb, var(--danger) 6%, transparent); }
+    .danger strong { color: var(--danger); }
+    .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0; }
+    .flow span { padding: 8px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font: 12px var(--mono); }
+    .flow b { color: var(--accent); }
+    .checklist { list-style: none; padding: 0; }
+    .checklist li { position: relative; padding-left: 26px; }
+    .checklist li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 800; }
+    .qa summary { color: var(--accent-2); }
+    .qa .answer-lead { color: var(--ink); font-weight: 650; }
+    .example-bank { border-color: color-mix(in srgb, var(--accent-2) 45%, var(--line)); }
+    .example-bank > summary { color: var(--accent-2); }
+    .example-note { margin: 12px 0 4px; color: var(--ink); font-weight: 700; }
+    .example-note::before { content: "EXAMPLE · "; color: var(--accent); font: 700 .7rem var(--mono); letter-spacing: .06em; }
+    .search-empty { display: none; padding: 80px 0; color: var(--muted); text-align: center; }
+    footer { padding-top: 35px; border-top: 1px solid var(--line); color: var(--muted); font-size: .83rem; }
+    .source-links { display: flex; flex-wrap: wrap; gap: 9px 16px; }
+    @media (max-width: 880px) {
+      .layout { display: block; }
+      .sidebar { display: none; }
+      .hero-grid, .grid-3 { grid-template-columns: 1fr; }
+      .topbar { padding-inline: 14px; }
+      .brand span:last-child { display: none; }
+    }
+    @media (max-width: 620px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .chapter-head { grid-template-columns: 1fr; gap: 3px; }
+      .chapter-no { padding: 0; }
+      .key { display: none; }
+      .search-wrap input { padding-right: 12px; }
+      h1 { font-size: 3.15rem; }
+    }
+    @media print {
+      :root { color-scheme: light; --bg: #fff; --panel: #fff; --panel-2: #f4f4f4; --ink: #111; --muted: #3d3d3d; --line: #bbb; --code: #f6f6f6; --accent: #096a48; --accent-2: #075b91; }
+      .topbar, .sidebar, .progress { display: none !important; }
+      .layout { display: block; max-width: none; padding: 0; }
+      .hero { padding-top: 20px; }
+      .chapter { break-inside: avoid-page; }
+      details { break-inside: avoid; }
+      details > * { display: block !important; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <header class="topbar">
+    <div class="brand"><span class="gopher-mark">GO</span><span>Interview Field Guide</span></div>
+    <label class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input id="search" type="search" placeholder="Search concepts, traps, code…" aria-label="Search notes">
+      <span class="key">/</span>
+    </label>
+    <button class="icon-button" id="expand" type="button" title="Expand/collapse all details" aria-label="Expand or collapse all details">↕</button>
+    <button class="icon-button" id="theme" type="button" title="Toggle theme" aria-label="Toggle color theme">☼</button>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" aria-label="Chapter navigation">
+      <p>Core language</p>
+      <a href="#plan">00 · Tonight's plan</a>
+      <a href="#foundations">01 · Foundations</a>
+      <a href="#data">02 · Data &amp; memory</a>
+      <a href="#structs">03 · Structs &amp; methods</a>
+      <a href="#interfaces">04 · Interfaces &amp; generics</a>
+      <a href="#errors">05 · Errors &amp; defer</a>
+      <p>Engineering</p>
+      <a href="#packages">06 · Packages &amp; tooling</a>
+      <a href="#concurrency">07 · Concurrency</a>
+      <a href="#sync">08 · Sync &amp; memory model</a>
+      <a href="#context">09 · Context &amp; patterns</a>
+      <a href="#stdlib">10 · Standard library</a>
+      <a href="#testing">11 · Testing</a>
+      <p>Advanced &amp; interview</p>
+      <a href="#runtime">12 · Runtime &amp; performance</a>
+      <a href="#production">13 · Production design</a>
+      <a href="#modern">14 · Modern Go</a>
+      <a href="#questions">15 · Rapid-fire Q&amp;A</a>
+      <a href="#cheatsheet">16 · Final cheat sheet</a>
+    </nav>
+
+    <main>
+      <section class="hero" id="top">
+        <p class="eyebrow">One-day revision · fundamentals → production</p>
+        <h1>Go, rebuilt in your head.</h1>
+        <p class="lede">A dense but readable interview refresher. Read the bold claims first, open details only where your memory is weak, and rehearse the short answers out loud.</p>
+        <div class="hero-grid">
+          <div class="stat"><strong>17 chapters</strong><span>language, concurrency, runtime, production</span></div>
+          <div class="stat"><strong>~3 hours</strong><span>fast pass; 6 hours with code recall</span></div>
+          <div class="stat"><strong>70+ snippets</strong><span>expandable examples with one-click copy</span></div>
+        </div>
+        <div class="notice"><strong>Scope:</strong> this page consolidates the examples already in this folder and adds missing interview essentials. “All topics” means the practical core expected in general Go interviews—not every standard-library package. Most snippets here are focused fragments; for complete, tested Go 1.21 examples, open the <a href="codebook/README.md">runnable codebook</a>. The <a href="GO_NOTES.md">text checklist</a> is the fastest final pass.</div>
+      </section>
+
+      <section class="chapter" id="plan" data-topic="study plan interview revision fundamentals">
+        <div class="chapter-head"><span class="chapter-no">00</span><div><h2>Use tonight strategically</h2><p class="summary">Breadth first, then weak spots. Do not spend an hour perfecting one obscure runtime detail.</p></div></div>
+        <div class="grid-3">
+          <article class="card accent"><h4>Pass 1 · 75 min</h4><p>Read chapter summaries, tables, and green callouts. Cover the entire map without opening every detail.</p></article>
+          <article class="card"><h4>Pass 2 · 75 min</h4><p>Focus on slices, interfaces, errors, concurrency, context, HTTP, SQL, tests, and runtime.</p></article>
+          <article class="card"><h4>Pass 3 · 30 min</h4><p>Answer chapter 15 aloud. Write the worker-pool and HTTP-handler skeletons from memory.</p></article>
+        </div>
+        <div class="callout"><strong>Interview answer shape:</strong> definition → why it matters → tiny example → trade-off/failure mode. A precise 30-second answer beats a five-minute tour.</div>
+        <details class="example-bank"><summary>Example: turn knowledge into an interview answer</summary><div class="details-body">
+          <p class="example-note">Question: why must you keep append's return value?</p>
+          <p><strong>Definition:</strong> a slice is a descriptor over an array. <strong>Why:</strong> append may allocate a different backing array. <strong>Example:</strong> <code>s = append(s, x)</code>. <strong>Trade-off:</strong> preallocating capacity can reduce allocations, but aliasing must remain intentional.</p>
+          <p>Use the same four-part shape for channels, interfaces, context, and error wrapping.</p>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="foundations" data-topic="syntax variables constants types zero values control flow loops switch functions closures arrays">
+        <div class="chapter-head"><span class="chapter-no">01</span><div><h2>Language foundations</h2><p class="summary">Go is statically typed, compiled, garbage-collected, package-oriented, and deliberately small. Its defaults and explicit control flow are features.</p></div></div>
+        <div class="grid-2">
+          <article class="card"><h4>Declarations</h4><p><code>var x int</code> gets the zero value. <code>x := 3</code> is short declaration inside functions. <code>const</code> values are compile-time and may be untyped. <code>iota</code> generates successive constants.</p></article>
+          <article class="card"><h4>Built-in families</h4><p>Booleans; signed/unsigned integers; floats; complex numbers; <code>byte</code> = <code>uint8</code>; <code>rune</code> = <code>int32</code>; strings; arrays; slices; maps; structs; pointers; functions; interfaces; channels.</p></article>
+          <article class="card"><h4>Control flow</h4><p>Only <code>for</code> loops. <code>if</code> and <code>switch</code> may have init statements. Switch breaks automatically; use <code>fallthrough</code> explicitly. No truthy values.</p></article>
+          <article class="card"><h4>Functions</h4><p>First-class values, closures, multiple returns, variadic final parameter. All arguments are passed by value—including copied slice/map/channel descriptors.</p></article>
+        </div>
+        <h3>Zero values you must know</h3>
+        <div class="table-wrap"><table><thead><tr><th>Type</th><th>Zero value</th><th>Usable?</th></tr></thead><tbody>
+          <tr><td>numbers / bool / string</td><td><code>0</code> / <code>false</code> / <code>""</code></td><td>Yes</td></tr>
+          <tr><td>pointer / slice / map / func / chan / interface</td><td><code>nil</code></td><td>Nil slice is readable/appendable; nil map is readable but assignment panics; nil channel blocks forever; nil func call panics.</td></tr>
+          <tr><td>array / struct</td><td>elements/fields recursively zeroed</td><td>Usually yes; design types so zero value is useful when practical.</td></tr>
+        </tbody></table></div>
+        <details><summary>Compact syntax tour</summary><div class="details-body"><pre><code><span class="kw">package</span> main
+
+<span class="kw">import</span> <span class="st">"fmt"</span>
+
+<span class="kw">const</span> MaxRetries = <span class="ty">3</span>        <span class="cm">// untyped constant</span>
+<span class="kw">type</span> Status <span class="ty">int</span>
+<span class="kw">const</span> ( Pending Status = <span class="kw">iota</span>; Running; Done )
+
+<span class="kw">func</span> <span class="fn">divide</span>(a, b <span class="ty">float64</span>) (<span class="ty">float64</span>, <span class="ty">error</span>) {
+    <span class="kw">if</span> b == <span class="ty">0</span> { <span class="kw">return</span> <span class="ty">0</span>, fmt.<span class="fn">Errorf</span>(<span class="st">"zero divisor"</span>) }
+    <span class="kw">return</span> a / b, <span class="kw">nil</span>
+}
+
+<span class="kw">for</span> i := <span class="ty">0</span>; i &lt; n; i++ { }    <span class="cm">// classic</span>
+<span class="kw">for</span> condition { }                 <span class="cm">// while</span>
+<span class="kw">for</span> { }                           <span class="cm">// forever</span>
+<span class="kw">for</span> i := <span class="kw">range</span> <span class="ty">5</span> { _ = i }        <span class="cm">// 0..4 (Go 1.22+)</span></code></pre></div></details>
+        <div class="callout"><strong>Say it:</strong> Go passes everything by value. Reference-like types work through small descriptors that point to backing storage; copying the descriptor is still value passing.</div>
+        <details class="example-bank"><summary>Examples: declarations, closures, variadics, switch, and range</summary><div class="details-body">
+          <p class="example-note">Swap, variadic sum, and closure state</p>
+          <pre><code><span class="kw">func</span> <span class="fn">swap</span>(a, b <span class="ty">string</span>) (<span class="ty">string</span>, <span class="ty">string</span>) { <span class="kw">return</span> b, a }
+
+<span class="kw">func</span> <span class="fn">sum</span>(xs ...<span class="ty">int</span>) <span class="ty">int</span> {
+    total := <span class="ty">0</span>
+    <span class="kw">for</span> _, x := <span class="kw">range</span> xs { total += x }
+    <span class="kw">return</span> total
+}
+
+<span class="kw">func</span> <span class="fn">counter</span>() <span class="kw">func</span>() <span class="ty">int</span> {
+    n := <span class="ty">0</span>
+    <span class="kw">return func</span>() <span class="ty">int</span> { n++; <span class="kw">return</span> n } <span class="cm">// n escapes and stays alive</span>
+}
+
+values := []<span class="ty">int</span>{<span class="ty">2</span>, <span class="ty">4</span>, <span class="ty">6</span>}
+fmt.<span class="fn">Println</span>(<span class="fn">sum</span>(values...))
+
+<span class="kw">switch</span> n := <span class="fn">sum</span>(values...); {
+<span class="kw">case</span> n &lt; <span class="ty">10</span>: fmt.<span class="fn">Println</span>(<span class="st">"small"</span>)
+<span class="kw">case</span> n &lt; <span class="ty">20</span>: fmt.<span class="fn">Println</span>(<span class="st">"medium"</span>)
+<span class="kw">default</span>: fmt.<span class="fn">Println</span>(<span class="st">"large"</span>)
+}</code></pre>
+          <p class="example-note">Type conversion is explicit</p>
+          <pre><code><span class="kw">var</span> count <span class="ty">int</span> = <span class="ty">3</span>
+ratio := <span class="ty">float64</span>(count) / <span class="ty">2</span> <span class="cm">// 1.5, not integer division</span>
+_ = ratio</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="data" data-topic="array slice capacity append copy map string rune byte unicode pointers make new escape stack heap memory aliasing">
+        <div class="chapter-head"><span class="chapter-no">02</span><div><h2>Data, collections &amp; memory</h2><p class="summary">Most Go bugs in interviews come from aliasing, nil behavior, Unicode assumptions, or losing the result of <code>append</code>.</p></div></div>
+        <h3>Arrays vs slices</h3>
+        <div class="grid-2">
+          <article class="card"><h4><code>[N]T</code> array</h4><p>Length is part of the type; values are copied on assignment/call; comparable if elements are comparable. Useful for fixed-size data and as backing storage.</p></article>
+          <article class="card accent"><h4><code>[]T</code> slice</h4><p>A descriptor: pointer to backing array, length, capacity. Multiple slices may alias. <code>append</code> may reuse or replace the backing array—always keep its return value.</p></article>
+        </div>
+        <pre><code>a := [<span class="ty">4</span>]<span class="ty">int</span>{<span class="ty">1</span>, <span class="ty">2</span>, <span class="ty">3</span>, <span class="ty">4</span>}
+s := a[<span class="ty">1</span>:<span class="ty">3</span>]          <span class="cm">// len=2, cap=3; values [2 3]</span>
+s = <span class="fn">append</span>(s, <span class="ty">9</span>)  <span class="cm">// may mutate a[3] because capacity remains</span>
+copyOfS := <span class="fn">append</span>([]<span class="ty">int</span>(<span class="kw">nil</span>), s...) <span class="cm">// independent copy</span>
+clear(s)              <span class="cm">// zero elements (Go 1.21+)</span></code></pre>
+        <details><summary>Slice rules and traps</summary><div class="details-body">
+          <ul>
+            <li><code>make([]T, len, cap)</code> allocates backing storage; <code>new([]T)</code> returns a pointer to a nil slice and is almost never wanted.</li>
+            <li><code>s[:len(s):len(s)]</code> is a full-slice expression that caps growth and forces a later append to allocate.</li>
+            <li>Deleting with <code>s = append(s[:i], s[i+1:]...)</code> preserves order; clear removed pointer slots if the backing array remains long-lived.</li>
+            <li>A tiny subslice can retain a huge backing array. Copy the needed portion when retention matters.</li>
+            <li>Nil slice and empty non-nil slice both have length 0, but may encode differently in JSON.</li>
+          </ul>
+        </div></details>
+        <h3>Maps, strings, and pointers</h3>
+        <div class="table-wrap"><table><thead><tr><th>Concept</th><th>Core rule</th><th>Interview trap</th></tr></thead><tbody>
+          <tr><td>Map</td><td><code>make(map[K]V)</code>; keys must be comparable; lookup <code>v, ok := m[k]</code>; <code>delete</code> missing key is safe.</td><td>Iteration order is unspecified. Concurrent read/write is unsafe. Map elements are not addressable.</td></tr>
+          <tr><td>String</td><td>Immutable byte sequence, conventionally UTF-8. <code>len(s)</code> counts bytes.</td><td><code>s[i]</code> is a byte; <code>range</code> decodes runes and yields byte indexes. Invalid UTF-8 becomes <code>RuneError</code>.</td></tr>
+          <tr><td>Pointer</td><td><code>&amp;x</code> takes address; <code>*p</code> dereferences. No pointer arithmetic (outside <code>unsafe</code>).</td><td>Returning a pointer to a local is safe. Escape analysis—not source syntax—decides stack vs heap.</td></tr>
+          <tr><td><code>make</code> vs <code>new</code></td><td><code>make</code> initializes slices/maps/channels and returns a value. <code>new(T)</code> allocates zeroed <code>T</code> and returns <code>*T</code>.</td><td>Allocation may still be stack-allocated; “new means heap” is false.</td></tr>
+        </tbody></table></div>
+        <pre><code>m := <span class="fn">make</span>(<span class="kw">map</span>[<span class="ty">string</span>]<span class="ty">int</span>)
+m[<span class="st">"go"</span>]++
+v, ok := m[<span class="st">"go"</span>]
+<span class="kw">for</span> k, v := <span class="kw">range</span> m { _, _ = k, v }
+
+text := <span class="st">"Go语言"</span>
+fmt.<span class="fn">Println</span>(<span class="fn">len</span>(text), utf8.<span class="fn">RuneCountInString</span>(text))
+<span class="kw">for</span> byteIndex, r := <span class="kw">range</span> text { fmt.<span class="fn">Printf</span>(<span class="st">"%d %c\n"</span>, byteIndex, r) }</code></pre>
+        <details><summary>Data structures in idiomatic Go</summary><div class="details-body"><div class="table-wrap"><table><thead><tr><th>Need</th><th>Representation</th><th>Cost / note</th></tr></thead><tbody>
+          <tr><td>stack</td><td><code>[]T</code>; push with append, pop last</td><td>Amortized O(1)</td></tr>
+          <tr><td>queue / deque</td><td>Slice + head index, or ring buffer for bounded queues</td><td>Avoid repeatedly removing index 0; periodically compact and clear references.</td></tr>
+          <tr><td>set</td><td><code>map[T]struct{}</code> (or <code>map[T]bool</code>)</td><td>Average O(1) membership; <code>T</code> comparable.</td></tr>
+          <tr><td>priority queue</td><td><code>container/heap</code> over a slice implementing <code>Len/Less/Swap/Push/Pop</code></td><td>O(log n) push/pop, O(1) peek.</td></tr>
+          <tr><td>tree / graph</td><td>Custom node pointers; graph often <code>map[ID][]ID</code></td><td>DFS recursion can grow the goroutine stack; iterative traversal gives explicit depth control.</td></tr>
+          <tr><td>ordered keys</td><td>Collect map keys and sort</td><td>Maps intentionally provide no stable iteration order.</td></tr>
+        </tbody></table></div></div></details>
+        <details class="example-bank"><summary>Examples: safe slice operations, Unicode, maps, stack, and queue</summary><div class="details-body">
+          <p class="example-note">Clone and delete without accidental retention</p>
+          <pre><code>clone := slices.<span class="fn">Clone</span>(src)             <span class="cm">// independent backing array</span>
+
+<span class="kw">func</span> <span class="fn">deleteAt</span>[T <span class="ty">any</span>](s []T, i <span class="ty">int</span>) []T {
+    <span class="fn">copy</span>(s[i:], s[i+<span class="ty">1</span>:])
+    <span class="kw">var</span> zero T
+    s[<span class="fn">len</span>(s)-<span class="ty">1</span>] = zero <span class="cm">// release a referenced object</span>
+    <span class="kw">return</span> s[:<span class="fn">len</span>(s)-<span class="ty">1</span>]
+}</code></pre>
+          <p class="example-note">Unicode-safe reversal</p>
+          <pre><code><span class="kw">func</span> <span class="fn">reverseText</span>(s <span class="ty">string</span>) <span class="ty">string</span> {
+    r := []<span class="ty">rune</span>(s)
+    <span class="kw">for</span> i, j := <span class="ty">0</span>, <span class="fn">len</span>(r)-<span class="ty">1</span>; i &lt; j; i, j = i+<span class="ty">1</span>, j-<span class="ty">1</span> {
+        r[i], r[j] = r[j], r[i]
+    }
+    <span class="kw">return</span> <span class="ty">string</span>(r)
+}</code></pre>
+          <p class="example-note">Frequency map, set, stack, and queue</p>
+          <pre><code>freq := <span class="kw">map</span>[<span class="ty">rune</span>]<span class="ty">int</span>{}
+<span class="kw">for</span> _, r := <span class="kw">range</span> <span class="st">"banana"</span> { freq[r]++ }
+seen := <span class="kw">map</span>[<span class="ty">string</span>]<span class="kw">struct</span>{}{<span class="st">"go"</span>: {}}
+
+stack := []<span class="ty">int</span>{}
+stack = <span class="fn">append</span>(stack, <span class="ty">10</span>)
+x := stack[<span class="fn">len</span>(stack)-<span class="ty">1</span>]; stack = stack[:<span class="fn">len</span>(stack)-<span class="ty">1</span>]
+
+queue, head := []<span class="ty">int</span>{<span class="ty">10</span>, <span class="ty">20</span>}, <span class="ty">0</span>
+y := queue[head]; head++
+_, _, _ = x, y, seen</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="structs" data-topic="struct method receiver embedding composition initialization constructor functional options method set value pointer receiver copy equality tags">
+        <div class="chapter-head"><span class="chapter-no">03</span><div><h2>Structs, methods &amp; composition</h2><p class="summary">Go models behavior with methods and interfaces, and reuse with composition. There are no classes or inheritance hierarchies.</p></div></div>
+        <div class="grid-2">
+          <article class="card"><h4>Value receiver <code>(t T)</code></h4><p>Receives a copy. Good for small immutable/value-like types. Its methods belong to method sets of both <code>T</code> and <code>*T</code>.</p></article>
+          <article class="card"><h4>Pointer receiver <code>(t *T)</code></h4><p>Can mutate, avoids copying large values, and should be used consistently when any method needs it. Its method belongs only to <code>*T</code>'s method set.</p></article>
+        </div>
+        <pre><code><span class="kw">type</span> User <span class="kw">struct</span> {
+    ID   <span class="ty">int64</span>
+    Name <span class="ty">string</span> <span class="st">`json:"name"`</span>
+}
+
+<span class="kw">func</span> (u User) <span class="fn">Valid</span>() <span class="ty">bool</span> { <span class="kw">return</span> u.ID &gt; <span class="ty">0</span> &amp;&amp; u.Name != <span class="st">""</span> }
+<span class="kw">func</span> (u *User) <span class="fn">Rename</span>(name <span class="ty">string</span>) { u.Name = name }
+
+<span class="kw">type</span> Audit <span class="kw">struct</span>{ CreatedAt time.Time }
+<span class="kw">type</span> Record <span class="kw">struct</span> {
+    Audit              <span class="cm">// embedded: fields/methods promoted</span>
+    Owner User          <span class="cm">// named composition</span>
+}</code></pre>
+        <div class="callout"><strong>Method-set nuance:</strong> the compiler may auto-take an address for an addressable value when calling <code>v.PointerMethod()</code>. Interface satisfaction does not get that convenience: if the required method has receiver <code>*T</code>, only <code>*T</code> implements it.</div>
+        <details><summary>Construction, copying, equality, and options</summary><div class="details-body">
+          <ul>
+            <li>Use keyed literals outside the defining package: <code>User{ID: 1, Name: "A"}</code>. They survive field reordering.</li>
+            <li>A struct is comparable only when every field is comparable. Slices, maps, and funcs are not comparable (except to nil).</li>
+            <li>Copying a struct copies its fields. If it contains slices, maps, pointers, mutexes, or file handles, the copy may alias or be invalid. Do not copy synchronization primitives after first use.</li>
+            <li>Constructors are conventions, not syntax. Return <code>*T</code> when identity/mutation matters; return <code>T</code> for small value types.</li>
+            <li>Functional options scale optional configuration: <code>NewServer(WithPort(8080), WithTimeout(time.Second))</code>. Validate conflicts at construction.</li>
+          </ul>
+          <pre><code><span class="kw">type</span> Option <span class="kw">func</span>(*Server) <span class="ty">error</span>
+<span class="kw">func</span> <span class="fn">WithTimeout</span>(d time.Duration) Option {
+    <span class="kw">return func</span>(s *Server) <span class="ty">error</span> {
+        <span class="kw">if</span> d &lt;= <span class="ty">0</span> { <span class="kw">return</span> errors.<span class="fn">New</span>(<span class="st">"timeout must be positive"</span>) }
+        s.timeout = d; <span class="kw">return nil</span>
+    }
+}</code></pre>
+        </div></details>
+        <details class="example-bank"><summary>Examples: receiver behavior, embedding, and a constructor</summary><div class="details-body">
+          <p class="example-note">Value receiver does not mutate the caller</p>
+          <pre><code><span class="kw">type</span> Counter <span class="kw">struct</span>{ N <span class="ty">int</span> }
+
+<span class="kw">func</span> (c Counter) <span class="fn">BrokenIncrement</span>() { c.N++ } <span class="cm">// changes only the copy</span>
+<span class="kw">func</span> (c *Counter) <span class="fn">Increment</span>() { c.N++ }      <span class="cm">// changes the caller</span>
+
+c := Counter{}
+c.<span class="fn">BrokenIncrement</span>() <span class="cm">// c.N == 0</span>
+c.<span class="fn">Increment</span>()       <span class="cm">// compiler uses (&amp;c); c.N == 1</span></code></pre>
+          <p class="example-note">Embedding promotes behavior but is not inheritance</p>
+          <pre><code><span class="kw">type</span> Logger <span class="kw">struct</span>{ Prefix <span class="ty">string</span> }
+<span class="kw">func</span> (l Logger) <span class="fn">Log</span>(msg <span class="ty">string</span>) { fmt.<span class="fn">Println</span>(l.Prefix, msg) }
+
+<span class="kw">type</span> Service <span class="kw">struct</span> {
+    Logger              <span class="cm">// Service gets promoted Log</span>
+    timeout time.Duration
+}
+
+<span class="kw">func</span> <span class="fn">NewService</span>(logger Logger, timeout time.Duration) (*Service, <span class="ty">error</span>) {
+    <span class="kw">if</span> timeout &lt;= <span class="ty">0</span> { <span class="kw">return nil</span>, errors.<span class="fn">New</span>(<span class="st">"timeout must be positive"</span>) }
+    <span class="kw">return</span> &amp;Service{Logger: logger, timeout: timeout}, <span class="kw">nil</span>
+}</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="interfaces" data-topic="interface implicit satisfaction method sets nil interface type assertion switch any empty interface generics constraints type sets comparable reflection">
+        <div class="chapter-head"><span class="chapter-no">04</span><div><h2>Interfaces, generics &amp; reflection</h2><p class="summary">Interfaces abstract behavior at runtime; generics preserve type information at compile time. Reach for reflection last.</p></div></div>
+        <h3>Interfaces</h3>
+        <div class="grid-2">
+          <article class="card accent"><h4>Implicit satisfaction</h4><p>A type implements an interface by having its methods—no declaration. Prefer tiny consumer-owned interfaces such as <code>io.Reader</code>.</p></article>
+          <article class="card warn"><h4>The typed-nil trap</h4><p>An interface is nil only when both dynamic type and dynamic value are nil. An interface holding <code>(*MyError)(nil)</code> is non-nil.</p></article>
+        </div>
+        <pre><code><span class="kw">type</span> Store <span class="kw">interface</span> { <span class="fn">Get</span>(context.Context, <span class="ty">string</span>) (User, <span class="ty">error</span>) }
+
+<span class="kw">func</span> <span class="fn">lookup</span>(ctx context.Context, s Store, id <span class="ty">string</span>) (User, <span class="ty">error</span>) { <span class="kw">return</span> s.<span class="fn">Get</span>(ctx, id) }
+
+v, ok := x.(User)          <span class="cm">// safe assertion</span>
+<span class="kw">switch</span> v := x.(<span class="kw">type</span>) {    <span class="cm">// type switch</span>
+<span class="kw">case</span> User: _ = v.Name
+<span class="kw">case</span> fmt.Stringer: _ = v.<span class="fn">String</span>()
+}</code></pre>
+        <details><summary>Why can a non-nil interface contain nil?</summary><div class="details-body"><p>Conceptually, an interface value is a pair <code>(dynamic type, dynamic value)</code>. <code>var p *Thing = nil; var x any = p</code> gives <code>(*Thing, nil)</code>, which differs from <code>(nil, nil)</code>. Avoid returning typed nils as errors or interfaces; return literal <code>nil</code>.</p></div></details>
+        <h3>Generics: reusable algorithms without losing types</h3>
+        <pre><code><span class="kw">type</span> Ordered <span class="kw">interface</span> { ~<span class="ty">int</span> | ~<span class="ty">int64</span> | ~<span class="ty">float64</span> | ~<span class="ty">string</span> }
+
+<span class="kw">func</span> <span class="fn">Max</span>[T Ordered](a, b T) T {
+    <span class="kw">if</span> a &gt; b { <span class="kw">return</span> a }
+    <span class="kw">return</span> b
+}
+
+<span class="kw">type</span> Set[T <span class="ty">comparable</span>] <span class="kw">map</span>[T]<span class="kw">struct</span>{}
+<span class="kw">func</span> (s Set[T]) <span class="fn">Has</span>(v T) <span class="ty">bool</span> { _, ok := s[v]; <span class="kw">return</span> ok }</code></pre>
+        <div class="grid-3">
+          <article class="card"><h4><code>any</code></h4><p>Alias for <code>interface{}</code>. Stores any value, but operations need assertions/reflection.</p></article>
+          <article class="card"><h4><code>comparable</code></h4><p>Constraint for types supporting <code>==</code>/<code>!=</code>; required for map keys.</p></article>
+          <article class="card"><h4><code>~T</code></h4><p>Includes defined types whose underlying type is <code>T</code>, e.g. <code>type Age int</code>.</p></article>
+        </div>
+        <div class="callout"><strong>Choose:</strong> concrete type by default; interface for substitutable behavior; type parameter when one algorithm works across related types; reflection when shape is known only at runtime (serialization/DI frameworks).</div>
+        <details><summary>Reflection safety checklist</summary><div class="details-body"><ul><li><code>reflect.TypeOf</code> inspects type; <code>reflect.ValueOf</code> inspects value.</li><li>A value must be settable (usually obtained from a non-nil pointer and <code>Elem</code>) before mutation.</li><li>Check <code>Kind</code>, <code>IsValid</code>, and nil-capable kinds before calling operations that can panic.</li><li>Reflection sacrifices compile-time safety and readability; isolate it behind a typed API.</li></ul></div></details>
+        <details class="example-bank"><summary>Examples: interface satisfaction, typed nil, generic map, and reflection</summary><div class="details-body">
+          <p class="example-note">Compile-time interface check and pointer method set</p>
+          <pre><code><span class="kw">type</span> Closer <span class="kw">interface</span>{ <span class="fn">Close</span>() <span class="ty">error</span> }
+<span class="kw">type</span> File <span class="kw">struct</span>{}
+<span class="kw">func</span> (*File) <span class="fn">Close</span>() <span class="ty">error</span> { <span class="kw">return nil</span> }
+
+<span class="kw">var</span> _ Closer = (*File)(<span class="kw">nil</span>) <span class="cm">// compile-time assertion</span>
+<span class="cm">// var _ Closer = File{}       // does not compile</span></code></pre>
+          <p class="example-note">The typed-nil error bug and its fix</p>
+          <pre><code><span class="kw">type</span> MyError <span class="kw">struct</span>{ msg <span class="ty">string</span> }
+<span class="kw">func</span> (e *MyError) <span class="fn">Error</span>() <span class="ty">string</span> { <span class="kw">return</span> e.msg }
+
+<span class="kw">func</span> <span class="fn">bad</span>() <span class="ty">error</span> { <span class="kw">var</span> e *MyError; <span class="kw">return</span> e } <span class="cm">// non-nil interface</span>
+<span class="kw">func</span> <span class="fn">good</span>() <span class="ty">error</span> { <span class="kw">return nil</span> }                <span class="cm">// nil interface</span></code></pre>
+          <p class="example-note">Generic transform preserves concrete types</p>
+          <pre><code><span class="kw">func</span> <span class="fn">Map</span>[A, B <span class="ty">any</span>](in []A, f <span class="kw">func</span>(A) B) []B {
+    out := <span class="fn">make</span>([]B, <span class="fn">len</span>(in))
+    <span class="kw">for</span> i, v := <span class="kw">range</span> in { out[i] = <span class="fn">f</span>(v) }
+    <span class="kw">return</span> out
+}
+names := <span class="fn">Map</span>([]<span class="ty">int</span>{<span class="ty">1</span>, <span class="ty">2</span>}, strconv.<span class="fn">Itoa</span>)</code></pre>
+          <p class="example-note">Reflection: mutate only a settable value</p>
+          <pre><code>n := <span class="ty">10</span>
+v := reflect.<span class="fn">ValueOf</span>(&amp;n).<span class="fn">Elem</span>()
+<span class="kw">if</span> v.<span class="fn">CanSet</span>() &amp;&amp; v.<span class="fn">Kind</span>() == reflect.Int { v.<span class="fn">SetInt</span>(<span class="ty">42</span>) }</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="errors" data-topic="error handling wrapping errors is as join sentinel custom panic recover defer named returns cleanup">
+        <div class="chapter-head"><span class="chapter-no">05</span><div><h2>Errors, defer, panic &amp; recover</h2><p class="summary">Errors are values and part of normal control flow. Panic is for broken invariants or truly unrecoverable states—not “exceptions with different spelling.”</p></div></div>
+        <pre><code><span class="kw">var</span> ErrNotFound = errors.<span class="fn">New</span>(<span class="st">"not found"</span>)
+
+<span class="kw">func</span> <span class="fn">Load</span>(id <span class="ty">string</span>) (User, <span class="ty">error</span>) {
+    u, err := repo.<span class="fn">Get</span>(id)
+    <span class="kw">if</span> err != <span class="kw">nil</span> {
+        <span class="kw">return</span> User{}, fmt.<span class="fn">Errorf</span>(<span class="st">"load user %q: %w"</span>, id, err)
+    }
+    <span class="kw">return</span> u, <span class="kw">nil</span>
+}
+
+<span class="kw">if</span> errors.<span class="fn">Is</span>(err, ErrNotFound) { }       <span class="cm">// identity through wrapping</span>
+<span class="kw">var</span> pathErr *fs.PathError
+<span class="kw">if</span> errors.<span class="fn">As</span>(err, &amp;pathErr) { }              <span class="cm">// type through wrapping</span></code></pre>
+        <div class="table-wrap"><table><thead><tr><th>Tool</th><th>Use</th><th>Avoid</th></tr></thead><tbody>
+          <tr><td><code>fmt.Errorf("…: %w", err)</code></td><td>Add operation/context while preserving cause.</td><td><code>%v</code> when callers need <code>Is/As</code>.</td></tr>
+          <tr><td>Sentinel</td><td>Stable condition clients branch on: <code>io.EOF</code>.</td><td>Exporting many sentinels that tightly couple packages.</td></tr>
+          <tr><td>Custom type</td><td>Structured fields or behavior, e.g. retryability.</td><td>Returning a typed nil pointer as <code>error</code>.</td></tr>
+          <tr><td><code>errors.Join</code></td><td>Report multiple independent failures; <code>Is/As</code> traverse children.</td><td>Forcing callers to parse message text.</td></tr>
+        </tbody></table></div>
+        <h3><code>defer</code> precisely</h3>
+        <ul class="tight">
+          <li>Deferred calls execute LIFO when the surrounding function returns—normal return or panic unwind.</li>
+          <li>Arguments are evaluated when the <code>defer</code> statement executes; a closure reads captured variables later.</li>
+          <li>A deferred closure can inspect/change named results. Use sparingly; it can obscure flow.</li>
+          <li>Do not defer resource closes inside a long loop without an inner function; defers wait until the outer function ends.</li>
+        </ul>
+        <pre><code>f, err := os.<span class="fn">Open</span>(name)
+<span class="kw">if</span> err != <span class="kw">nil</span> { <span class="kw">return</span> err }
+<span class="kw">defer func</span>() {
+    <span class="kw">if</span> closeErr := f.<span class="fn">Close</span>(); err == <span class="kw">nil</span> &amp;&amp; closeErr != <span class="kw">nil</span> { err = closeErr }
+}()</code></pre>
+        <div class="callout danger"><strong>Recover boundary:</strong> <code>recover</code> works only when called by a deferred function in the same goroutine. Recover at process/framework boundaries to log and convert a panic; never silently continue from corrupted state.</div>
+        <details class="example-bank"><summary>Examples: custom errors, wrapping, joining, defer, and recovery</summary><div class="details-body">
+          <p class="example-note">Structured error that supports errors.As</p>
+          <pre><code><span class="kw">type</span> ValidationError <span class="kw">struct</span>{ Field, Problem <span class="ty">string</span> }
+<span class="kw">func</span> (e *ValidationError) <span class="fn">Error</span>() <span class="ty">string</span> { <span class="kw">return</span> e.Field + <span class="st">": "</span> + e.Problem }
+
+err := &amp;ValidationError{Field: <span class="st">"email"</span>, Problem: <span class="st">"invalid"</span>}
+wrapped := fmt.<span class="fn">Errorf</span>(<span class="st">"create user: %w"</span>, err)
+<span class="kw">var</span> target *ValidationError
+<span class="kw">if</span> errors.<span class="fn">As</span>(wrapped, &amp;target) { fmt.<span class="fn">Println</span>(target.Field) }</code></pre>
+          <p class="example-note">Collect independent cleanup failures</p>
+          <pre><code><span class="kw">var</span> errs []<span class="ty">error</span>
+<span class="kw">if</span> err := cache.<span class="fn">Close</span>(); err != <span class="kw">nil</span> { errs = <span class="fn">append</span>(errs, err) }
+<span class="kw">if</span> err := db.<span class="fn">Close</span>(); err != <span class="kw">nil</span> { errs = <span class="fn">append</span>(errs, err) }
+<span class="kw">return</span> errors.<span class="fn">Join</span>(errs...)</code></pre>
+          <p class="example-note">HTTP panic boundary</p>
+          <pre><code><span class="kw">func</span> <span class="fn">recoverMiddleware</span>(next http.Handler) http.Handler {
+    <span class="kw">return</span> http.<span class="fn">HandlerFunc</span>(<span class="kw">func</span>(w http.ResponseWriter, r *http.Request) {
+        <span class="kw">defer func</span>() {
+            <span class="kw">if</span> v := <span class="fn">recover</span>(); v != <span class="kw">nil</span> {
+                slog.<span class="fn">Error</span>(<span class="st">"panic"</span>, <span class="st">"value"</span>, v, <span class="st">"stack"</span>, <span class="ty">string</span>(debug.<span class="fn">Stack</span>()))
+                http.<span class="fn">Error</span>(w, <span class="st">"internal error"</span>, http.StatusInternalServerError)
+            }
+        }()
+        next.<span class="fn">ServeHTTP</span>(w, r)
+    })
+}</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="packages" data-topic="packages modules go mod workspace version semantic versioning internal init build tags embed tooling fmt vet staticcheck commands">
+        <div class="chapter-head"><span class="chapter-no">06</span><div><h2>Packages, modules &amp; toolchain</h2><p class="summary">A package is a compilation unit and API boundary. A module is a versioned collection of packages rooted at <code>go.mod</code>.</p></div></div>
+        <div class="grid-2">
+          <article class="card"><h4>Visibility &amp; layout</h4><p>Uppercase identifiers are exported. Package name usually matches directory. <code>internal/</code> restricts imports to its parent tree. <code>cmd/app/main.go</code> is a common executable layout.</p></article>
+          <article class="card"><h4>Initialization</h4><p>Dependencies initialize first; then package vars, then <code>init</code> functions; finally <code>main</code>. Avoid important hidden work in <code>init</code>.</p></article>
+        </div>
+        <pre><code>go mod init example.com/service     <span class="cm"># create module</span>
+go get example.com/lib@v1.2.3      <span class="cm"># change dependency</span>
+go mod tidy                         <span class="cm"># add needed / remove unused</span>
+go test ./codebook                 <span class="cm"># this folder's tested examples</span>
+go test -race ./codebook           <span class="cm"># dynamic race detection</span>
+go test -cover ./codebook          <span class="cm"># coverage</span>
+go vet ./codebook                  <span class="cm"># suspicious constructs</span>
+gofmt -w codebook/*.go             <span class="cm"># canonical formatting</span>
+go build ./cmd/api                  <span class="cm"># typical service layout, not this folder</span>
+go run ./cmd/api                    <span class="cm"># compile + run a service</span>
+go list -deps ./...                 <span class="cm"># inspect dependency graph</span></code></pre>
+        <p class="micro">In a conventional module, use <code>./...</code> for test, race, cover, and vet. This study folder also contains independent historical <code>main</code> examples in the same directories, so package-wide tests of the whole folder will not compile.</p>
+        <details><summary>Module/version details interviewers probe</summary><div class="details-body">
+          <ul>
+            <li><code>go</code> directive sets the module's language/toolchain expectations; <code>toolchain</code> may suggest a toolchain.</li>
+            <li><code>go.sum</code> records cryptographic checksums; it is not a lockfile guaranteeing one whole dependency graph.</li>
+            <li>Minimal version selection chooses the highest required version in the build list. Major v2+ belongs in the module path: <code>/v2</code>.</li>
+            <li><code>replace</code> is useful locally or for forks, but downstream consumers do not inherit a dependency module's replace directives.</li>
+            <li><code>go work</code> coordinates multiple local modules without temporary replace directives.</li>
+            <li>Build constraints go at the top: <code>//go:build linux &amp;&amp; amd64</code>. Filename suffixes such as <code>_linux.go</code> also constrain builds.</li>
+            <li><code>//go:embed</code> embeds files into a string, byte slice, or <code>embed.FS</code> at compile time.</li>
+          </ul>
+        </div></details>
+        <details><summary>Low-level escape hatches: <code>unsafe</code>, cgo, and generation</summary><div class="details-body">
+          <ul>
+            <li><code>unsafe</code> can bypass type and memory safety for carefully isolated interoperability/performance code. Pointer conversions obey strict lifetime/alignment rules; never smuggle pointers through <code>uintptr</code> across GC-visible operations.</li>
+            <li>cgo calls cross between Go and C, add build/deployment complexity, and obey pointer-passing rules. Batch calls and prefer pure Go unless a native library is necessary.</li>
+            <li><code>//go:generate</code> records generation commands but <code>go build</code> does not run them automatically. Generated files should be reproducible and usually checked or generated in CI explicitly.</li>
+          </ul>
+        </div></details>
+        <details class="example-bank"><summary>Examples: package layout, build tags, embed, and module replacement</summary><div class="details-body">
+          <p class="example-note">A small service layout</p>
+          <pre><code>service/
+├── go.mod
+├── cmd/api/main.go          <span class="cm"># wiring and process lifecycle</span>
+├── internal/user/service.go <span class="cm"># domain/application logic</span>
+├── internal/postgres/user.go
+├── internal/httpapi/routes.go
+└── migrations/</code></pre>
+          <p class="example-note">Platform implementation selected at build time</p>
+          <pre><code><span class="cm">//go:build linux</span>
+
+<span class="kw">package</span> platform
+
+<span class="kw">func</span> <span class="fn">DefaultSocket</span>() <span class="ty">string</span> { <span class="kw">return</span> <span class="st">"/var/run/app.sock"</span> }</code></pre>
+          <p class="example-note">Embed migrations without runtime file-path assumptions</p>
+          <pre><code><span class="kw">import</span> <span class="st">"embed"</span>
+
+<span class="cm">//go:embed migrations/*.sql</span>
+<span class="kw">var</span> migrations embed.FS</code></pre>
+          <p class="example-note">Develop two local modules together</p>
+          <pre><code>go work init ./service ./shared
+go work use ./another-module
+
+<span class="cm"># Temporary go.mod override when required:</span>
+replace example.com/shared =&gt; ../shared</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="concurrency" data-topic="concurrency goroutine channel buffered unbuffered close select waitgroup deadlock leak fanout fanin pipeline worker pool semaphore">
+        <div class="chapter-head"><span class="chapter-no">07</span><div><h2>Concurrency: goroutines &amp; channels</h2><p class="summary">Concurrency structures independently progressing work; parallelism is simultaneous execution. Goroutines are cheap, not free—every one needs an ownership and termination story.</p></div></div>
+        <div class="flow"><span>spawn</span><b>→</b><span>work</span><b>→</b><span>signal result/error</span><b>→</b><span>cancel</span><b>→</b><span>join</span></div>
+        <h3>Channel semantics</h3>
+        <div class="table-wrap"><table><thead><tr><th>Operation</th><th>Nil channel</th><th>Open channel</th><th>Closed channel</th></tr></thead><tbody>
+          <tr><td>send <code>ch &lt;- v</code></td><td>blocks forever</td><td>blocks until capacity/receiver permits</td><td>panics</td></tr>
+          <tr><td>receive <code>&lt;-ch</code></td><td>blocks forever</td><td>blocks until value available</td><td>immediately yields zero value; <code>ok=false</code> after buffer drains</td></tr>
+          <tr><td><code>close(ch)</code></td><td>panics</td><td>signals no more sends</td><td>panics if closed again</td></tr>
+        </tbody></table></div>
+        <ul>
+          <li>Unbuffered channel: send and receive rendezvous; provides synchronization.</li>
+          <li>Buffered channel: decouples up to capacity; capacity is not a substitute for backpressure design.</li>
+          <li>The sending side usually closes. Receivers do not close merely because they are finished.</li>
+          <li>Closing is not required for garbage collection; close only to communicate “no more values.”</li>
+          <li>Use directional API types: <code>&lt;-chan T</code> receive-only and <code>chan&lt;- T</code> send-only.</li>
+        </ul>
+        <pre><code><span class="kw">func</span> <span class="fn">worker</span>(ctx context.Context, jobs &lt;-<span class="kw">chan</span> Job, out <span class="kw">chan</span>&lt;- Result) {
+    <span class="kw">for</span> {
+        <span class="kw">select</span> {
+        <span class="kw">case</span> &lt;-ctx.<span class="fn">Done</span>():
+            <span class="kw">return</span>
+        <span class="kw">case</span> job, ok := &lt;-jobs:
+            <span class="kw">if</span> !ok { <span class="kw">return</span> }
+            result := <span class="fn">process</span>(job)
+            <span class="kw">select</span> {
+            <span class="kw">case</span> out &lt;- result:
+            <span class="kw">case</span> &lt;-ctx.<span class="fn">Done</span>(): <span class="kw">return</span>
+            }
+        }
+    }
+}</code></pre>
+        <details><summary><code>select</code>, fairness, timeouts, and nil channels</summary><div class="details-body">
+          <ul>
+            <li>If multiple cases are ready, one is chosen pseudo-randomly; do not depend on priority.</li>
+            <li><code>default</code> makes the select non-blocking and can create a CPU spin loop. Usually block, use a timer, or yield intentionally.</li>
+            <li><code>time.After</code> is convenient for one-off waits; reuse a <code>Timer</code> in hot loops.</li>
+            <li>Assigning a channel to nil disables its select case—useful for state machines.</li>
+          </ul>
+        </div></details>
+        <div class="callout danger"><strong>Leak test:</strong> for every send, receive, lock, and wait, ask “what unblocks this if another stage exits early?” If the answer is nothing, you have a possible goroutine leak.</div>
+        <details class="example-bank"><summary>Examples: channel lifecycle, select, fan-in, and semaphore</summary><div class="details-body">
+          <p class="example-note">Producer owns channel closure</p>
+          <pre><code><span class="kw">func</span> <span class="fn">numbers</span>(n <span class="ty">int</span>) &lt;-<span class="kw">chan</span> <span class="ty">int</span> {
+    out := <span class="fn">make</span>(<span class="kw">chan</span> <span class="ty">int</span>)
+    <span class="kw">go func</span>() {
+        <span class="kw">defer</span> <span class="fn">close</span>(out)
+        <span class="kw">for</span> i := <span class="ty">0</span>; i &lt; n; i++ { out &lt;- i }
+    }()
+    <span class="kw">return</span> out
+}
+<span class="kw">for</span> n := <span class="kw">range</span> <span class="fn">numbers</span>(<span class="ty">3</span>) { fmt.<span class="fn">Println</span>(n) }</code></pre>
+          <p class="example-note">Timeout without leaking the worker result send</p>
+          <pre><code>result := <span class="fn">make</span>(<span class="kw">chan</span> Result, <span class="ty">1</span>) <span class="cm">// worker may finish after caller leaves</span>
+<span class="kw">go func</span>() { result &lt;- <span class="fn">slowCall</span>() }()
+<span class="kw">select</span> {
+<span class="kw">case</span> r := &lt;-result: _ = r
+<span class="kw">case</span> &lt;-time.<span class="fn">After</span>(time.Second): <span class="kw">return</span> ErrTimeout
+}</code></pre>
+          <p class="example-note">Merge two streams and close after both drain</p>
+          <pre><code><span class="kw">func</span> <span class="fn">merge</span>[T <span class="ty">any</span>](a, b &lt;-<span class="kw">chan</span> T) &lt;-<span class="kw">chan</span> T {
+    out := <span class="fn">make</span>(<span class="kw">chan</span> T); <span class="kw">var</span> wg sync.WaitGroup; wg.<span class="fn">Add</span>(<span class="ty">2</span>)
+    forward := <span class="kw">func</span>(in &lt;-<span class="kw">chan</span> T) { <span class="kw">defer</span> wg.<span class="fn">Done</span>(); <span class="kw">for</span> v := <span class="kw">range</span> in { out &lt;- v } }
+    <span class="kw">go</span> <span class="fn">forward</span>(a); <span class="kw">go</span> <span class="fn">forward</span>(b)
+    <span class="kw">go func</span>() { wg.<span class="fn">Wait</span>(); <span class="fn">close</span>(out) }()
+    <span class="kw">return</span> out
+}</code></pre>
+          <p class="example-note">Bound concurrency with a semaphore</p>
+          <pre><code>sem := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw">struct</span>{}, <span class="ty">5</span>)
+sem &lt;- <span class="kw">struct</span>{}{}
+<span class="kw">defer func</span>() { &lt;-sem }()
+<span class="kw">return</span> <span class="fn">expensiveOperation</span>()</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="sync" data-topic="mutex rwmutex atomic waitgroup once cond pool race condition data race memory model happens before deadlock livelock starvation">
+        <div class="chapter-head"><span class="chapter-no">08</span><div><h2>Synchronization &amp; memory model</h2><p class="summary">“No crash” does not mean “no race.” Synchronization provides both mutual exclusion and visibility/ordering guarantees.</p></div></div>
+        <div class="grid-3">
+          <article class="card"><h4><code>sync.Mutex</code></h4><p>Protect an invariant/shared state. Keep critical sections small; use <code>defer Unlock</code> when clarity wins. Never copy after use.</p></article>
+          <article class="card"><h4><code>sync.RWMutex</code></h4><p>Multiple readers or one writer. Not automatically faster—extra overhead and write contention can make it worse. Measure.</p></article>
+          <article class="card"><h4><code>sync/atomic</code></h4><p>Low-level counters/flags/pointers. Prefer typed atomics. Multi-field invariants still need a lock or immutable snapshot.</p></article>
+          <article class="card"><h4><code>sync.WaitGroup</code></h4><p>Wait for a known group. Add before starting, Done once, Wait at join. Pass by pointer; do not copy.</p></article>
+          <article class="card"><h4><code>sync.Once</code></h4><p>Run exactly once. A panic still counts as having returned; later calls do not retry.</p></article>
+          <article class="card"><h4><code>sync.Cond</code> / <code>Pool</code></h4><p>Cond waits for condition changes under a lock; always wait in a loop. Pool reuses temporary objects and may discard them anytime.</p></article>
+        </div>
+        <h3>Happens-before anchors</h3>
+        <ul>
+          <li>A channel send is synchronized before completion of its corresponding receive; channel close is synchronized before a receive that observes closure.</li>
+          <li><code>Mutex.Unlock</code> synchronizes before a later successful <code>Lock</code> on that mutex.</li>
+          <li>Package initialization completes before <code>main</code>; starting a goroutine occurs before that goroutine begins.</li>
+          <li>A goroutine's exit alone is not synchronization. Join it through a channel, WaitGroup, or other primitive.</li>
+        </ul>
+        <div class="callout"><strong>Memory-model rule:</strong> in the absence of data races, Go programs behave as if goroutines were interleaved sequentially. Do not use sleeps, timing, or “word-sized reads are probably atomic” as synchronization.</div>
+        <details><summary>Deadlock, livelock, starvation, race</summary><div class="details-body"><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Meaning</th><th>Defense</th></tr></thead><tbody>
+          <tr><td>Data race</td><td>Concurrent access to same memory, at least one write, without synchronization.</td><td>Ownership, locks, atomics, channels; run <code>go test -race</code>.</td></tr>
+          <tr><td>Race condition</td><td>Correctness depends on event ordering; may exist without a formal data race.</td><td>Design explicit ordering/idempotency; deterministic tests.</td></tr>
+          <tr><td>Deadlock</td><td>Participants permanently wait on one another.</td><td>Consistent lock order, cancellation, avoid holding locks across blocking calls.</td></tr>
+          <tr><td>Livelock</td><td>Participants run/respond but make no progress.</td><td>Backoff/jitter, asymmetric decisions.</td></tr>
+          <tr><td>Starvation</td><td>A participant cannot get needed time/resources.</td><td>Bound work, fair queues, reduce lock hold time.</td></tr>
+        </tbody></table></div></div></details>
+        <details class="example-bank"><summary>Examples: mutex-protected state, atomics, Once, and Cond</summary><div class="details-body">
+          <p class="example-note">Map protected by a mutex</p>
+          <pre><code><span class="kw">type</span> Cache <span class="kw">struct</span> { mu sync.RWMutex; data <span class="kw">map</span>[<span class="ty">string</span>]<span class="ty">string</span> }
+<span class="kw">func</span> (c *Cache) <span class="fn">Get</span>(k <span class="ty">string</span>) (<span class="ty">string</span>, <span class="ty">bool</span>) {
+    c.mu.<span class="fn">RLock</span>(); <span class="kw">defer</span> c.mu.<span class="fn">RUnlock</span>()
+    v, ok := c.data[k]; <span class="kw">return</span> v, ok
+}
+<span class="kw">func</span> (c *Cache) <span class="fn">Set</span>(k, v <span class="ty">string</span>) {
+    c.mu.<span class="fn">Lock</span>(); <span class="kw">defer</span> c.mu.<span class="fn">Unlock</span>(); c.data[k] = v
+}</code></pre>
+          <p class="example-note">Atomic counter and one-time initialization</p>
+          <pre><code><span class="kw">var</span> requests atomic.Int64
+requests.<span class="fn">Add</span>(<span class="ty">1</span>)
+fmt.<span class="fn">Println</span>(requests.<span class="fn">Load</span>())
+
+<span class="kw">var</span> once sync.Once
+once.<span class="fn">Do</span>(<span class="kw">func</span>() { config = <span class="fn">loadConfig</span>() })</code></pre>
+          <p class="example-note">Cond waits in a loop because waking does not prove the condition</p>
+          <pre><code>mu.<span class="fn">Lock</span>()
+<span class="kw">for</span> <span class="fn">len</span>(queue) == <span class="ty">0</span> { notEmpty.<span class="fn">Wait</span>() } <span class="cm">// unlocks while waiting, relocks before return</span>
+item := queue[<span class="ty">0</span>]; queue = queue[<span class="ty">1</span>:]
+mu.<span class="fn">Unlock</span>()
+_ = item</code></pre>
+          <p class="example-note">Consistent lock order prevents a cycle</p>
+          <pre><code><span class="cm">// Always lock lower account ID first, regardless of transfer direction.</span>
+first, second := <span class="fn">orderByID</span>(from, to)
+first.mu.<span class="fn">Lock</span>(); <span class="kw">defer</span> first.mu.<span class="fn">Unlock</span>()
+second.mu.<span class="fn">Lock</span>(); <span class="kw">defer</span> second.mu.<span class="fn">Unlock</span>()</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="context" data-topic="context cancellation deadline timeout value cause worker pool fan in fan out pipeline semaphore errgroup graceful shutdown signals">
+        <div class="chapter-head"><span class="chapter-no">09</span><div><h2>Context, cancellation &amp; patterns</h2><p class="summary"><code>context.Context</code> carries cancellation, deadline, and request-scoped metadata across API boundaries. It is not a bag of optional parameters.</p></div></div>
+        <ul class="checklist">
+          <li>Take <code>ctx</code> as the first parameter; do not store it in a struct for ordinary requests.</li>
+          <li>Never pass nil; use <code>context.Background()</code> or <code>TODO()</code>.</li>
+          <li>Always call the returned cancel function, even with a timeout, to release resources promptly.</li>
+          <li>Cancellation flows parent → descendants, not upward or sideways.</li>
+          <li>Use values only for request-scoped cross-cutting data; use a private typed key.</li>
+        </ul>
+        <pre><code><span class="kw">func</span> <span class="fn">Fetch</span>(parent context.Context, url <span class="ty">string</span>) ([]<span class="ty">byte</span>, <span class="ty">error</span>) {
+    ctx, cancel := context.<span class="fn">WithTimeout</span>(parent, <span class="ty">2</span>*time.Second)
+    <span class="kw">defer</span> <span class="fn">cancel</span>()
+
+    req, err := http.<span class="fn">NewRequestWithContext</span>(ctx, http.MethodGet, url, <span class="kw">nil</span>)
+    <span class="kw">if</span> err != <span class="kw">nil</span> { <span class="kw">return nil</span>, err }
+    resp, err := http.DefaultClient.<span class="fn">Do</span>(req)
+    <span class="kw">if</span> err != <span class="kw">nil</span> { <span class="kw">return nil</span>, err }
+    <span class="kw">defer</span> resp.Body.<span class="fn">Close</span>()
+    <span class="kw">return</span> io.<span class="fn">ReadAll</span>(resp.Body)
+}</code></pre>
+        <h3>Concurrency pattern map</h3>
+        <div class="table-wrap"><table><thead><tr><th>Pattern</th><th>Use</th><th>Key invariant</th></tr></thead><tbody>
+          <tr><td>Worker pool</td><td>Bound concurrency over many jobs.</td><td>Fixed workers; jobs close; results close after all workers finish.</td></tr>
+          <tr><td>Fan-out / fan-in</td><td>Parallelize independent work, merge streams.</td><td>Merger closes output only after every input drains.</td></tr>
+          <tr><td>Pipeline</td><td>Compose stages through channels.</td><td>Every stage respects cancellation and owns its output close.</td></tr>
+          <tr><td>Semaphore</td><td>Limit in-flight expensive operations.</td><td>Buffered token channel; release with defer; consider fairness.</td></tr>
+          <tr><td><code>errgroup</code></td><td>Related goroutines with first-error cancellation.</td><td>All functions return; group Wait joins and reports error.</td></tr>
+          <tr><td>Graceful shutdown</td><td>Stop accepting work, drain, release.</td><td>Signal → cancel → server Shutdown with deadline → wait.</td></tr>
+        </tbody></table></div>
+        <details><summary>Minimal bounded worker pool</summary><div class="details-body"><pre><code><span class="kw">func</span> <span class="fn">Run</span>(ctx context.Context, jobs []Job, n <span class="ty">int</span>) ([]Result, <span class="ty">error</span>) {
+    in := <span class="fn">make</span>(<span class="kw">chan</span> Job)
+    out := <span class="fn">make</span>(<span class="kw">chan</span> Result)
+    <span class="kw">var</span> wg sync.WaitGroup
+    wg.<span class="fn">Add</span>(n)
+    <span class="kw">for</span> i := <span class="ty">0</span>; i &lt; n; i++ {
+        <span class="kw">go func</span>() { <span class="kw">defer</span> wg.<span class="fn">Done</span>(); <span class="fn">worker</span>(ctx, in, out) }()
+    }
+    <span class="kw">go func</span>() { wg.<span class="fn">Wait</span>(); <span class="fn">close</span>(out) }()
+    <span class="kw">go func</span>() {
+        <span class="kw">defer</span> <span class="fn">close</span>(in)
+        <span class="kw">for</span> _, j := <span class="kw">range</span> jobs {
+            <span class="kw">select</span> { <span class="kw">case</span> in &lt;- j: <span class="kw">case</span> &lt;-ctx.<span class="fn">Done</span>(): <span class="kw">return</span> }
+        }
+    }()
+    <span class="kw">var</span> results []Result
+    <span class="kw">for</span> r := <span class="kw">range</span> out { results = <span class="fn">append</span>(results, r) }
+    <span class="kw">return</span> results, ctx.<span class="fn">Err</span>()
+}</code></pre><p>Production code often uses <code>errgroup.WithContext</code> to propagate the first error and cancel sibling work.</p></div></details>
+        <details class="example-bank"><summary>Examples: cancellation cause, errgroup, context values, and graceful shutdown</summary><div class="details-body">
+          <p class="example-note">Attach a useful cancellation cause</p>
+          <pre><code>ctx, cancel := context.<span class="fn">WithCancelCause</span>(parent)
+<span class="kw">defer</span> <span class="fn">cancel</span>(<span class="kw">nil</span>)
+<span class="kw">if</span> quotaExceeded { <span class="fn">cancel</span>(ErrQuotaExceeded) }
+&lt;-ctx.<span class="fn">Done</span>()
+fmt.<span class="fn">Println</span>(context.<span class="fn">Cause</span>(ctx))</code></pre>
+          <p class="example-note">Related tasks fail and cancel together</p>
+          <pre><code>g, ctx := errgroup.<span class="fn">WithContext</span>(ctx)
+g.<span class="fn">Go</span>(<span class="kw">func</span>() <span class="ty">error</span> { <span class="kw">return</span> store.<span class="fn">Load</span>(ctx) })
+g.<span class="fn">Go</span>(<span class="kw">func</span>() <span class="ty">error</span> { <span class="kw">return</span> index.<span class="fn">Refresh</span>(ctx) })
+<span class="kw">if</span> err := g.<span class="fn">Wait</span>(); err != <span class="kw">nil</span> { <span class="kw">return</span> fmt.<span class="fn">Errorf</span>(<span class="st">"startup: %w"</span>, err) }</code></pre>
+          <p class="example-note">Typed private context key</p>
+          <pre><code><span class="kw">type</span> requestIDKey <span class="kw">struct</span>{}
+ctx = context.<span class="fn">WithValue</span>(ctx, requestIDKey{}, requestID)
+id, _ := ctx.<span class="fn">Value</span>(requestIDKey{}).(<span class="ty">string</span>)</code></pre>
+          <p class="example-note">Signal-aware shutdown with a hard deadline</p>
+          <pre><code>ctx, stop := signal.<span class="fn">NotifyContext</span>(context.<span class="fn">Background</span>(), os.Interrupt, syscall.SIGTERM)
+<span class="kw">defer</span> <span class="fn">stop</span>()
+<span class="kw">go func</span>() { _ = srv.<span class="fn">ListenAndServe</span>() }()
+&lt;-ctx.<span class="fn">Done</span>()
+shutdownCtx, cancel := context.<span class="fn">WithTimeout</span>(context.<span class="fn">Background</span>(), <span class="ty">10</span>*time.Second)
+<span class="kw">defer</span> <span class="fn">cancel</span>()
+<span class="kw">return</span> srv.<span class="fn">Shutdown</span>(shutdownCtx)</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="stdlib" data-topic="standard library io reader writer bufio os file json encoding http server client middleware sql transaction database time timer ticker template logging slog">
+        <div class="chapter-head"><span class="chapter-no">10</span><div><h2>Standard library essentials</h2><p class="summary">Know the interfaces and lifecycles, not every function. Most production bugs are missing deadlines, closes, row checks, or size limits.</p></div></div>
+        <h3>I/O: compose small interfaces</h3>
+        <pre><code><span class="kw">type</span> Reader <span class="kw">interface</span> { <span class="fn">Read</span>(p []<span class="ty">byte</span>) (n <span class="ty">int</span>, err <span class="ty">error</span>) }
+<span class="kw">type</span> Writer <span class="kw">interface</span> { <span class="fn">Write</span>(p []<span class="ty">byte</span>) (n <span class="ty">int</span>, err <span class="ty">error</span>) }
+
+n, err := io.<span class="fn">Copy</span>(dst, io.<span class="fn">LimitReader</span>(src, maxBytes))
+<span class="cm">// LimitReader truncates; check for overflow separately if excess is an error.</span></code></pre>
+        <div class="grid-2">
+          <article class="card"><h4>JSON</h4><p>Only exported fields. Tags control names/omit rules. Decoder supports streams; call <code>DisallowUnknownFields</code> for strict v1 request DTOs. Dynamic numbers default to <code>float64</code> unless <code>UseNumber</code>.</p></article>
+          <article class="card"><h4>Time</h4><p><code>Time</code> carries wall time and sometimes monotonic reading. Use <code>Duration</code>. Stop tickers/timers when no longer needed. Store/transport UTC; localize at boundaries.</p></article>
+          <article class="card"><h4>Logging</h4><p>Use structured <code>log/slog</code>, stable keys, request IDs, and appropriate levels. Never log credentials/tokens; avoid high-cardinality unbounded labels.</p></article>
+          <article class="card"><h4>Regex / templates</h4><p><code>regexp</code> is RE2-style with linear-time guarantees. <code>html/template</code> contextually escapes HTML; do not replace it with <code>text/template</code> for untrusted web content.</p></article>
+        </div>
+        <details open><summary>Production HTTP skeleton</summary><div class="details-body"><pre><code><span class="kw">type</span> API <span class="kw">struct</span>{ store Store; log *slog.Logger }
+
+<span class="kw">func</span> (a *API) <span class="fn">getUser</span>(w http.ResponseWriter, r *http.Request) {
+    ctx := r.<span class="fn">Context</span>()
+    id := r.PathValue(<span class="st">"id"</span>)
+    user, err := a.store.<span class="fn">Get</span>(ctx, id)
+    <span class="kw">if</span> errors.<span class="fn">Is</span>(err, ErrNotFound) { http.<span class="fn">Error</span>(w, <span class="st">"not found"</span>, <span class="ty">404</span>); <span class="kw">return</span> }
+    <span class="kw">if</span> err != <span class="kw">nil</span> { a.log.<span class="fn">ErrorContext</span>(ctx, <span class="st">"get user"</span>, <span class="st">"err"</span>, err); http.<span class="fn">Error</span>(w, <span class="st">"internal error"</span>, <span class="ty">500</span>); <span class="kw">return</span> }
+    w.<span class="fn">Header</span>().<span class="fn">Set</span>(<span class="st">"Content-Type"</span>, <span class="st">"application/json"</span>)
+    <span class="kw">if</span> err := json.<span class="fn">NewEncoder</span>(w).<span class="fn">Encode</span>(user); err != <span class="kw">nil</span> { a.log.<span class="fn">Warn</span>(<span class="st">"encode response"</span>, <span class="st">"err"</span>, err) }
+}
+
+srv := &amp;http.Server{
+    Addr: <span class="st">":8080"</span>, Handler: mux,
+    ReadHeaderTimeout: <span class="ty">5</span>*time.Second,
+    ReadTimeout: <span class="ty">15</span>*time.Second, WriteTimeout: <span class="ty">15</span>*time.Second,
+    IdleTimeout: <span class="ty">60</span>*time.Second,
+}</code></pre>
+          <ul><li>Client: reuse <code>http.Client</code>/<code>Transport</code>; set timeouts; close response body; check status; propagate context.</li><li>Server: cap headers/bodies, set timeouts, validate inputs, recover panics at middleware, shut down gracefully.</li><li>Handlers may be concurrent: injected dependencies must be concurrency-safe.</li></ul>
+        </div></details>
+        <details><summary><code>database/sql</code>: pool and transaction rules</summary><div class="details-body">
+          <ul>
+            <li><code>*sql.DB</code> is a concurrency-safe pool, not one connection. Open it once; tune max open/idle/lifetime.</li>
+            <li>Use placeholders; never concatenate untrusted input. Placeholder syntax depends on driver.</li>
+            <li>Pass context to <code>QueryContext</code>/<code>ExecContext</code>. Close <code>Rows</code>, scan every row, then check <code>rows.Err()</code>.</li>
+            <li><code>QueryRow</code> reports query errors on <code>Scan</code>. Distinguish <code>sql.ErrNoRows</code>.</li>
+            <li>Inside a transaction, use <code>tx</code> only—not <code>db</code>, or operations may run outside it. Defer rollback; commit on success.</li>
+          </ul>
+          <pre><code>tx, err := db.<span class="fn">BeginTx</span>(ctx, <span class="kw">nil</span>)
+<span class="kw">if</span> err != <span class="kw">nil</span> { <span class="kw">return</span> err }
+<span class="kw">defer</span> tx.<span class="fn">Rollback</span>() <span class="cm">// safe no-op after successful commit</span>
+<span class="kw">if</span> _, err = tx.<span class="fn">ExecContext</span>(ctx, query, arg); err != <span class="kw">nil</span> { <span class="kw">return</span> err }
+<span class="kw">return</span> tx.<span class="fn">Commit</span>()</code></pre>
+        </div></details>
+        <details class="example-bank"><summary>Examples: streaming I/O, strict JSON, HTTP middleware, SQL rows, and timers</summary><div class="details-body">
+          <p class="example-note">Stream a bounded upload to disk</p>
+          <pre><code><span class="kw">const</span> maxUpload = <span class="ty">10</span> &lt;&lt; <span class="ty">20</span> <span class="cm">// 10 MiB</span>
+src := http.<span class="fn">MaxBytesReader</span>(w, r.Body, maxUpload)
+<span class="kw">defer</span> src.<span class="fn">Close</span>()
+dst, err := os.<span class="fn">CreateTemp</span>(<span class="st">""</span>, <span class="st">"upload-*"</span>)
+<span class="kw">if</span> err != <span class="kw">nil</span> { <span class="kw">return</span> err }
+<span class="kw">defer</span> dst.<span class="fn">Close</span>()
+_, err = io.<span class="fn">Copy</span>(dst, src)</code></pre>
+          <p class="example-note">Decode exactly one strict JSON object</p>
+          <pre><code>body := http.<span class="fn">MaxBytesReader</span>(w, r.Body, <span class="ty">1</span>&lt;&lt;<span class="ty">20</span>) <span class="cm">// errors if over limit</span>
+<span class="kw">defer</span> body.<span class="fn">Close</span>()
+dec := json.<span class="fn">NewDecoder</span>(body)
+dec.<span class="fn">DisallowUnknownFields</span>()
+<span class="kw">var</span> in CreateUserRequest
+<span class="kw">if</span> err := dec.<span class="fn">Decode</span>(&amp;in); err != <span class="kw">nil</span> { <span class="kw">return</span> err }
+<span class="kw">if</span> err := dec.<span class="fn">Decode</span>(&amp;<span class="kw">struct</span>{}{}); !errors.<span class="fn">Is</span>(err, io.EOF) {
+    <span class="kw">return</span> errors.<span class="fn">New</span>(<span class="st">"body must contain one JSON value"</span>)
+}</code></pre>
+          <p class="example-note">Composable request-ID middleware</p>
+          <pre><code><span class="kw">func</span> <span class="fn">requestID</span>(next http.Handler) http.Handler {
+    <span class="kw">return</span> http.<span class="fn">HandlerFunc</span>(<span class="kw">func</span>(w http.ResponseWriter, r *http.Request) {
+        id := r.<span class="fn">Header</span>.<span class="fn">Get</span>(<span class="st">"X-Request-ID"</span>)
+        <span class="kw">if</span> id == <span class="st">""</span> { id = uuid.<span class="fn">New</span>().<span class="fn">String</span>() }
+        w.<span class="fn">Header</span>().<span class="fn">Set</span>(<span class="st">"X-Request-ID"</span>, id)
+        next.<span class="fn">ServeHTTP</span>(w, r.<span class="fn">WithContext</span>(context.<span class="fn">WithValue</span>(r.<span class="fn">Context</span>(), requestIDKey{}, id)))
+    })
+}</code></pre>
+          <p class="example-note">Query many rows safely</p>
+          <pre><code>rows, err := db.<span class="fn">QueryContext</span>(ctx, <span class="st">`SELECT id, name FROM users WHERE active = $1`</span>, <span class="kw">true</span>)
+<span class="kw">if</span> err != <span class="kw">nil</span> { <span class="kw">return nil</span>, err }
+<span class="kw">defer</span> rows.<span class="fn">Close</span>()
+<span class="kw">var</span> users []User
+<span class="kw">for</span> rows.<span class="fn">Next</span>() {
+    <span class="kw">var</span> u User
+    <span class="kw">if</span> err := rows.<span class="fn">Scan</span>(&amp;u.ID, &amp;u.Name); err != <span class="kw">nil</span> { <span class="kw">return nil</span>, err }
+    users = <span class="fn">append</span>(users, u)
+}
+<span class="kw">return</span> users, rows.<span class="fn">Err</span>()</code></pre>
+          <p class="example-note">Reusable timer in a loop</p>
+          <pre><code>timer := time.<span class="fn">NewTimer</span>(time.Second)
+<span class="kw">defer</span> timer.<span class="fn">Stop</span>()
+<span class="kw">for</span> {
+    <span class="kw">select</span> { <span class="kw">case</span> &lt;-timer.C: <span class="fn">poll</span>(); timer.<span class="fn">Reset</span>(time.Second); <span class="kw">case</span> &lt;-ctx.<span class="fn">Done</span>(): <span class="kw">return</span> }
+}</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="testing" data-topic="testing table driven subtest parallel benchmark fuzz mock fake httptest testmain coverage race synctest example golden">
+        <div class="chapter-head"><span class="chapter-no">11</span><div><h2>Testing, benchmarks &amp; fuzzing</h2><p class="summary">Tests are ordinary Go. Prefer deterministic behavior, narrow interfaces, table cases, and assertions that explain the mismatch.</p></div></div>
+        <pre><code><span class="kw">func</span> <span class="fn">TestNormalize</span>(t *testing.T) {
+    tests := []<span class="kw">struct</span>{ name, in, want <span class="ty">string</span> }{
+        {<span class="st">"trim"</span>, <span class="st">" go "</span>, <span class="st">"go"</span>},
+        {<span class="st">"empty"</span>, <span class="st">" "</span>, <span class="st">""</span>},
+    }
+    <span class="kw">for</span> _, tc := <span class="kw">range</span> tests {
+        t.<span class="fn">Run</span>(tc.name, <span class="kw">func</span>(t *testing.T) {
+            <span class="kw">if</span> got := <span class="fn">Normalize</span>(tc.in); got != tc.want {
+                t.<span class="fn">Fatalf</span>(<span class="st">"Normalize(%q) = %q; want %q"</span>, tc.in, got, tc.want)
+            }
+        })
+    }
+}</code></pre>
+        <div class="table-wrap"><table><thead><tr><th>Technique</th><th>Use</th><th>Watch</th></tr></thead><tbody>
+          <tr><td>Table tests</td><td>Many inputs share arrange/act/assert.</td><td>Include meaningful names and edge cases.</td></tr>
+          <tr><td><code>t.Parallel</code></td><td>Independent tests can overlap.</td><td>No shared mutable globals; modern loop vars are per-iteration in Go 1.22+.</td></tr>
+          <tr><td>Fakes</td><td>Small in-memory implementation of consumer-owned interface.</td><td>Usually clearer than interaction-heavy mocks.</td></tr>
+          <tr><td><code>httptest</code></td><td>Record handlers or run test servers.</td><td>Test status, headers, body, cancellation.</td></tr>
+          <tr><td>Benchmark</td><td><code>func BenchmarkX(b *testing.B)</code>; report allocs.</td><td>Prevent dead-code elimination; compare with benchstat; measure representative inputs.</td></tr>
+          <tr><td>Fuzzing</td><td>Properties over generated inputs; seed corpus first.</td><td>Function must be deterministic and fast; preserve minimized regressions.</td></tr>
+        </tbody></table></div>
+        <pre><code><span class="kw">func</span> <span class="fn">FuzzRoundTrip</span>(f *testing.F) {
+    f.<span class="fn">Add</span>(<span class="st">"hello"</span>)
+    f.<span class="fn">Fuzz</span>(<span class="kw">func</span>(t *testing.T, s <span class="ty">string</span>) {
+        got := <span class="fn">Decode</span>(<span class="fn">Encode</span>(s))
+        <span class="kw">if</span> got != s { t.<span class="fn">Fatalf</span>(<span class="st">"round trip: got %q want %q"</span>, got, s) }
+    })
+}</code></pre>
+        <div class="callout"><strong>Testing pyramid:</strong> pure unit tests for logic, boundary tests for HTTP/DB adapters, a few end-to-end flows. Run <code>-race</code> on realistic concurrent paths; the detector only finds races that execute.</div>
+        <details class="example-bank"><summary>Examples: fake dependency, HTTP test, cleanup, benchmark, and golden file</summary><div class="details-body">
+          <p class="example-note">A small fake defined for the test's needs</p>
+          <pre><code><span class="kw">type</span> fakeStore <span class="kw">struct</span>{ user User; err <span class="ty">error</span> }
+<span class="kw">func</span> (f fakeStore) <span class="fn">Get</span>(context.Context, <span class="ty">string</span>) (User, <span class="ty">error</span>) {
+    <span class="kw">return</span> f.user, f.err
+}</code></pre>
+          <p class="example-note">Test a handler without a real socket</p>
+          <pre><code>req := httptest.<span class="fn">NewRequest</span>(http.MethodGet, <span class="st">"/users/42"</span>, <span class="kw">nil</span>)
+req.<span class="fn">SetPathValue</span>(<span class="st">"id"</span>, <span class="st">"42"</span>)
+rec := httptest.<span class="fn">NewRecorder</span>()
+api.<span class="fn">getUser</span>(rec, req)
+<span class="kw">if</span> rec.Code != http.StatusOK { t.<span class="fn">Fatalf</span>(<span class="st">"status=%d body=%s"</span>, rec.Code, rec.Body.<span class="fn">String</span>()) }</code></pre>
+          <p class="example-note">Register cleanup immediately</p>
+          <pre><code>dir := t.<span class="fn">TempDir</span>()
+old := os.<span class="fn">Getenv</span>(<span class="st">"APP_ENV"</span>)
+t.<span class="fn">Cleanup</span>(<span class="kw">func</span>() { _ = os.<span class="fn">Setenv</span>(<span class="st">"APP_ENV"</span>, old) })
+_ = dir</code></pre>
+          <p class="example-note">Allocation-aware benchmark</p>
+          <pre><code><span class="kw">func</span> <span class="fn">BenchmarkEncode</span>(b *testing.B) {
+    input := <span class="fn">makeFixture</span>(); b.<span class="fn">ReportAllocs</span>()
+    <span class="kw">for</span> b.<span class="fn">Loop</span>() { sink, _ = <span class="fn">Encode</span>(input) }
+}</code></pre>
+          <p class="example-note">Golden file with explicit update mode</p>
+          <pre><code>got := <span class="fn">Render</span>(input)
+path := filepath.<span class="fn">Join</span>(<span class="st">"testdata"</span>, <span class="st">"output.golden"</span>)
+<span class="kw">if</span> *update { _ = os.<span class="fn">WriteFile</span>(path, got, <span class="ty">0o644</span>) }
+want, _ := os.<span class="fn">ReadFile</span>(path)
+<span class="kw">if</span> !bytes.<span class="fn">Equal</span>(got, want) { t.<span class="fn">Fatalf</span>(<span class="st">"mismatch\n%s"</span>, cmp.<span class="fn">Diff</span>(<span class="ty">string</span>(want), <span class="ty">string</span>(got))) }</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="runtime" data-topic="runtime scheduler GMP goroutine stack heap escape analysis garbage collector GC GOGC GOMEMLIMIT pprof trace benchmark optimization allocation profiling PGO">
+        <div class="chapter-head"><span class="chapter-no">12</span><div><h2>Runtime, GC &amp; performance</h2><p class="summary">Explain the mental model, not implementation trivia. Optimize only after measurement and keep the benchmark that proves the win.</p></div></div>
+        <h3>Scheduler: G–M–P</h3>
+        <div class="grid-3">
+          <article class="card"><h4>G · goroutine</h4><p>Task state plus a small growable stack. Much cheaper than an OS thread, but it retains stack/references while alive.</p></article>
+          <article class="card"><h4>M · machine</h4><p>An OS thread executing Go code (or blocked in a syscall/cgo).</p></article>
+          <article class="card"><h4>P · processor</h4><p>Runtime resource required to execute Go code; roughly <code>GOMAXPROCS</code> Ps schedule runnable Gs onto Ms.</p></article>
+        </div>
+        <p>Work stealing balances local run queues; network polling integrates I/O readiness; preemption prevents long-running goroutines from monopolizing execution. The scheduler makes no useful ordering guarantee for your application.</p>
+        <h3>Allocation &amp; garbage collection</h3>
+        <ul>
+          <li>Escape analysis decides whether values can live on a stack or must outlive the frame. Inspect with <code>go build -gcflags=-m</code>.</li>
+          <li>Go's GC is concurrent and tracing. Allocation rate and live heap size drive CPU/latency cost more than “number of objects ever allocated.”</li>
+          <li><code>GOGC</code> trades memory for collection frequency; <code>GOMEMLIMIT</code> gives a soft runtime memory limit. Tune only with observability.</li>
+          <li>Reduce needless allocations by reusing buffers judiciously, preallocating known slice/map capacity, streaming, and avoiding interface/reflection conversions in hot paths—but measure.</li>
+        </ul>
+        <h3>Diagnosis ladder</h3>
+        <div class="flow"><span>reproduce</span><b>→</b><span>benchmark/metrics</span><b>→</b><span>pprof / trace</span><b>→</b><span>change one thing</span><b>→</b><span>compare</span></div>
+        <div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Tool/profile</th><th>Question</th></tr></thead><tbody>
+          <tr><td>high CPU</td><td>CPU profile</td><td>Which stacks consume on-CPU samples?</td></tr>
+          <tr><td>memory growth</td><td>heap in-use + alloc profiles</td><td>What stays live vs what allocates rapidly?</td></tr>
+          <tr><td>contention</td><td>mutex / block profiles</td><td>Where do goroutines wait?</td></tr>
+          <tr><td>latency / scheduling</td><td><code>go tool trace</code></td><td>Are GC, syscalls, network waits, or scheduler delays dominant?</td></tr>
+          <tr><td>leaked goroutines</td><td>goroutine profile; Go 1.27 <code>goroutineleak</code></td><td>Which waits can never be unblocked?</td></tr>
+        </tbody></table></div>
+        <pre><code>go test -bench=. -benchmem ./codebook
+go test -run=^$ -bench=BenchmarkCountRunes -cpuprofile=cpu.out -memprofile=mem.out ./codebook
+go tool pprof -http=:0 cpu.out
+go test -trace=trace.out ./codebook
+go tool trace trace.out</code></pre>
+        <div class="callout"><strong>Performance answer:</strong> first establish workload and SLO, profile, identify the dominant cost, make the smallest evidence-based change, then validate latency, throughput, memory, and correctness.</div>
+        <details class="example-bank"><summary>Examples: allocations, pooling, CPU profiling, and scheduler-safe design</summary><div class="details-body">
+          <p class="example-note">Preallocate when final size is known</p>
+          <pre><code><span class="kw">func</span> <span class="fn">Squares</span>(xs []<span class="ty">int</span>) []<span class="ty">int</span> {
+    out := <span class="fn">make</span>([]<span class="ty">int</span>, <span class="ty">0</span>, <span class="fn">len</span>(xs))
+    <span class="kw">for</span> _, x := <span class="kw">range</span> xs { out = <span class="fn">append</span>(out, x*x) }
+    <span class="kw">return</span> out
+}</code></pre>
+          <p class="example-note">Pool temporary buffers, never required state</p>
+          <pre><code><span class="kw">var</span> buffers = sync.Pool{New: <span class="kw">func</span>() <span class="ty">any</span> { <span class="kw">return new</span>(bytes.Buffer) }}
+buf := buffers.<span class="fn">Get</span>().(*bytes.Buffer)
+buf.<span class="fn">Reset</span>()
+<span class="kw">defer</span> buffers.<span class="fn">Put</span>(buf)
+<span class="cm">// use buf only until it is returned</span></code></pre>
+          <p class="example-note">Expose pprof on a separate protected listener</p>
+          <pre><code><span class="kw">import</span> _ <span class="st">"net/http/pprof"</span>
+<span class="kw">go func</span>() {
+    <span class="cm">// Bind to localhost or a private admin network; add auth in production.</span>
+    _ = http.<span class="fn">ListenAndServe</span>(<span class="st">"127.0.0.1:6060"</span>, http.DefaultServeMux)
+}()</code></pre>
+          <p class="example-note">Do not use sleep to order goroutines</p>
+          <pre><code>ready := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw">struct</span>{})
+<span class="kw">go func</span>() { <span class="fn">initialize</span>(); <span class="fn">close</span>(ready) }()
+&lt;-ready <span class="cm">// an explicit happens-before edge, unlike time.Sleep</span>
+<span class="fn">serve</span>()</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="production" data-topic="production architecture dependency injection clean hexagonal API security observability retries idempotency backpressure graceful shutdown config design patterns repository middleware circuit breaker">
+        <div class="chapter-head"><span class="chapter-no">13</span><div><h2>Production Go design</h2><p class="summary">Keep domain logic boring, dependencies explicit, concurrency bounded, and boundaries defensive.</p></div></div>
+        <div class="grid-2">
+          <article class="card accent"><h4>Dependency direction</h4><p>Core logic depends on small interfaces it owns. Adapters implement HTTP, SQL, queues, or cloud APIs. Wire concrete dependencies in <code>main</code>.</p></article>
+          <article class="card"><h4>API design</h4><p>Accept interfaces when substitution is needed; return concrete types. Make invalid states hard to construct. Document ownership, concurrency safety, blocking, and errors.</p></article>
+          <article class="card"><h4>Resilience</h4><p>Timeout every remote call. Retry only transient/idempotent work, with exponential backoff and jitter. Bound queues and concurrency; shed excess load.</p></article>
+          <article class="card"><h4>Observability</h4><p>Structured logs + metrics + traces. Propagate context. Measure request rate, errors, latency, saturation; add domain metrics and profiles.</p></article>
+        </div>
+        <h3>Request lifecycle</h3>
+        <div class="flow"><span>parse + size limit</span><b>→</b><span>authenticate/authorize</span><b>→</b><span>validate</span><b>→</b><span>domain</span><b>→</b><span>persist</span><b>→</b><span>map response</span></div>
+        <details><summary>Production checklist</summary><div class="details-body"><ul class="checklist">
+          <li>Configuration is validated once at startup; secrets stay outside source and logs.</li>
+          <li>Every external operation has context/deadline; HTTP/DB clients and pools are reused.</li>
+          <li>Inputs and body sizes are bounded; SQL is parameterized; templates escape output.</li>
+          <li>Retries have limits, jitter, classification, and idempotency; no retry storms.</li>
+          <li>Background goroutines have a supervisor/owner, cancellation, panic policy, and join.</li>
+          <li>Server handles SIGTERM: stop accepting, cancel background work, drain with deadline.</li>
+          <li>Errors retain internal cause in logs but expose safe stable responses to clients.</li>
+          <li>Health endpoints distinguish liveness from readiness; shutdown flips readiness first.</li>
+        </ul></div></details>
+        <details><summary>Framework and cloud note for this folder's Gin/Fiber examples</summary><div class="details-body"><p>Gin and Fiber provide routing, middleware, binding, and response conveniences; they do not change the underlying engineering rules. Keep handlers thin, dependencies explicit, middleware ordered, authentication separate from authorization, and domain logic independent of the framework. Validate JWT issuer, audience, algorithm, expiry, and key rotation—not merely the signature. Fetch secrets through environment/secret-manager adapters, cache sensibly, rotate safely, and never return provider errors or credentials to clients.</p></div></details>
+        <div class="callout danger"><strong>Common architecture smell:</strong> declaring giant interfaces next to implementations. Define the smallest interface at the consumer; it improves cohesion, testing, and substitutability.</div>
+        <details class="example-bank"><summary>Examples: dependency injection, retry policy, idempotency, and middleware order</summary><div class="details-body">
+          <p class="example-note">Wire concrete adapters at the composition root</p>
+          <pre><code><span class="kw">func</span> <span class="fn">main</span>() {
+    cfg := <span class="fn">mustLoadConfig</span>()
+    db := <span class="fn">mustOpenDB</span>(cfg.DatabaseURL)
+    repo := postgres.<span class="fn">NewUserRepository</span>(db)
+    service := user.<span class="fn">NewService</span>(repo, slog.<span class="fn">Default</span>())
+    handler := httpapi.<span class="fn">NewHandler</span>(service)
+    <span class="fn">run</span>(handler) <span class="cm">// business packages do not import postgres/http</span>
+}</code></pre>
+          <p class="example-note">Retry only classified transient failures</p>
+          <pre><code><span class="kw">for</span> attempt := <span class="ty">0</span>; attempt &lt; maxAttempts; attempt++ {
+    err := client.<span class="fn">Do</span>(ctx, idempotentRequest)
+    <span class="kw">if</span> err == <span class="kw">nil</span> { <span class="kw">return nil</span> }
+    <span class="kw">if</span> !<span class="fn">isTransient</span>(err) { <span class="kw">return</span> err }
+    delay := <span class="fn">backoff</span>(attempt) + <span class="fn">jitter</span>()
+    <span class="kw">select</span> { <span class="kw">case</span> &lt;-time.<span class="fn">After</span>(delay): <span class="kw">case</span> &lt;-ctx.<span class="fn">Done</span>(): <span class="kw">return</span> ctx.<span class="fn">Err</span>() }
+}
+<span class="kw">return</span> ErrRetriesExhausted</code></pre>
+          <p class="example-note">Idempotency key guards a payment mutation</p>
+          <pre><code><span class="cm">// Conceptual flow: validate the key and hash the request body.</span>
+record, err := repo.<span class="fn">ReserveUniqueKey</span>(ctx, key, requestHash)
+<span class="kw">if</span> err != <span class="kw">nil</span> { <span class="kw">return</span> Payment{}, err } <span class="cm">// unique DB constraint arbitrates races</span>
+<span class="kw">if</span> record.Completed { <span class="kw">return</span> record.Payment, <span class="kw">nil</span> }
+payment, err := gateway.<span class="fn">Charge</span>(ctx, request, key) <span class="cm">// pass the SAME key to provider</span>
+<span class="kw">if</span> err != <span class="kw">nil</span> { <span class="kw">return</span> Payment{}, err }
+<span class="kw">return</span> repo.<span class="fn">Complete</span>(ctx, key, payment) <span class="cm">// durable status/result</span></code></pre>
+          <p class="micro">A database transaction cannot roll back an external charge. On timeout or crash, reconcile the provider result using the same key; define how concurrent “in progress” requests are handled and reject a reused key with a different body.</p>
+          <p class="example-note">Middleware order is part of behavior</p>
+          <pre><code>handler := <span class="fn">routes</span>()
+handler = <span class="fn">authorize</span>(handler) <span class="cm">// inner: needs authenticated identity</span>
+handler = <span class="fn">authenticate</span>(handler)
+handler = <span class="fn">rateLimit</span>(handler)
+handler = <span class="fn">accessLog</span>(handler)
+handler = <span class="fn">recoverPanic</span>(handler) <span class="cm">// outer: catches downstream panic</span></code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="modern" data-topic="modern Go versions 1.22 1.23 1.24 1.25 1.26 1.27 loop variable iterator generic methods json v2 new builtins clear min max">
+        <div class="chapter-head"><span class="chapter-no">14</span><div><h2>Modern Go: changes worth knowing</h2><p class="summary">The core language changes slowly. These are the post-generics updates most likely to correct outdated three-year-old assumptions.</p></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Version</th><th>High-signal change</th></tr></thead><tbody>
+          <tr><td>1.21</td><td>Built-ins <code>min</code>, <code>max</code>, <code>clear</code>; improved generic inference; structured logging via <code>log/slog</code>.</td></tr>
+          <tr><td>1.22</td><td>Each freshly declared loop variable is per-iteration (fixes classic closure capture); <code>range</code> over integers; enhanced <code>net/http</code> routing patterns.</td></tr>
+          <tr><td>1.23</td><td><code>range</code> over iterator functions; <code>iter</code> package and iterator helpers in <code>slices</code>/<code>maps</code>; timer/ticker channel semantics improved.</td></tr>
+          <tr><td>1.24</td><td>Generic type aliases; Swiss-table-style map implementation; <code>testing.B.Loop</code>; weak pointers and finalization cleanup facilities.</td></tr>
+          <tr><td>1.25</td><td><code>testing/synctest</code> for concurrent/time-based tests; container-aware <code>GOMAXPROCS</code>; WaitGroup helper additions.</td></tr>
+          <tr><td>1.26</td><td><code>new(expr)</code> creates pointer initialized from an expression; runtime/toolchain and library improvements.</td></tr>
+          <tr><td>1.27</td><td>Generic methods; broader function inference; <code>encoding/json/v2</code> and <code>jsontext</code>; standard <code>uuid</code>; goroutine-leak profile.</td></tr>
+        </tbody></table></div>
+        <div class="notice"><strong>Version discipline:</strong> behavior/features depend on the language version in <code>go.mod</code>, not merely the installed binary. In mixed-version interviews, state the version assumption.</div>
+        <details><summary>Old advice to unlearn</summary><div class="details-body"><ul>
+          <li>“Always shadow range variables before closures” is no longer necessary for newly declared loop variables in modules using Go 1.22+, though understanding the historical trap remains useful.</li>
+          <li>Generics are no longer brand-new, and Go 1.27 permits methods to declare their own type parameters; interface methods still cannot be generic.</li>
+          <li>Use <code>os.ReadFile</code>/<code>io.ReadAll</code>, not deprecated <code>ioutil</code> helpers.</li>
+          <li>Prefer <code>errors.Is/As</code> over equality/type assertions through wrapped error chains.</li>
+          <li>Use <code>math/rand/v2</code> for new non-cryptographic code where its API fits; use <code>crypto/rand</code> for secrets.</li>
+        </ul></div></details>
+        <details class="example-bank"><summary>Examples: modern loops, iterators, new(expr), and generic methods</summary><div class="details-body">
+          <p class="example-note">Loop closures now capture distinct iteration variables</p>
+          <pre><code><span class="kw">for</span> _, name := <span class="kw">range</span> []<span class="ty">string</span>{<span class="st">"Ada"</span>, <span class="st">"Rob"</span>, <span class="st">"Ken"</span>} {
+    <span class="kw">go func</span>() { fmt.<span class="fn">Println</span>(name) }() <span class="cm">// distinct name in Go 1.22+ semantics</span>
+}
+<span class="kw">for</span> i := <span class="kw">range</span> <span class="ty">3</span> { fmt.<span class="fn">Println</span>(i) } <span class="cm">// 0, 1, 2</span></code></pre>
+          <p class="example-note">Iterator function used by range</p>
+          <pre><code><span class="kw">func</span> <span class="fn">Backward</span>[T <span class="ty">any</span>](s []T) iter.Seq[T] {
+    <span class="kw">return func</span>(yield <span class="kw">func</span>(T) <span class="ty">bool</span>) {
+        <span class="kw">for</span> i := <span class="fn">len</span>(s)-<span class="ty">1</span>; i &gt;= <span class="ty">0</span>; i-- { <span class="kw">if</span> !<span class="fn">yield</span>(s[i]) { <span class="kw">return</span> } }
+    }
+}
+<span class="kw">for</span> v := <span class="kw">range</span> <span class="fn">Backward</span>([]<span class="ty">int</span>{<span class="ty">1</span>, <span class="ty">2</span>, <span class="ty">3</span>}) { fmt.<span class="fn">Println</span>(v) }</code></pre>
+          <p class="example-note">Pointer to an initialized value</p>
+          <pre><code><span class="kw">type</span> Person <span class="kw">struct</span>{ Age *<span class="ty">int</span> <span class="st">`json:"age,omitempty"`</span> }
+p := Person{Age: <span class="fn">new</span>(<span class="ty">42</span>)} <span class="cm">// Go 1.26+: concise *int field value</span></code></pre>
+          <p class="example-note">Method with its own type parameter</p>
+          <pre><code><span class="kw">type</span> Decoder <span class="kw">struct</span>{ data []<span class="ty">byte</span> }
+<span class="kw">func</span> (d Decoder) <span class="fn">Into</span>[T <span class="ty">any</span>]() (T, <span class="ty">error</span>) { <span class="cm">// Go 1.27+</span>
+    <span class="kw">var</span> out T
+    <span class="kw">return</span> out, json.<span class="fn">Unmarshal</span>(d.data, &amp;out)
+}</code></pre>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="questions" data-topic="interview questions answers rapid fire traps explain quiz">
+        <div class="chapter-head"><span class="chapter-no">15</span><div><h2>Rapid-fire interview Q&amp;A</h2><p class="summary">Answer before opening. Aim for 20–40 seconds each.</p></div></div>
+        <details class="qa"><summary>1. Slice vs array?</summary><div class="details-body"><p class="answer-lead">Array length is part of its value type; a slice is a descriptor over an array.</p><p>Arrays copy in full. Slices copy pointer/len/cap and may alias backing storage. Append may reallocate, so retain the returned slice.</p></div></details>
+        <details class="qa"><summary>2. Why can append change another slice?</summary><div class="details-body"><p class="answer-lead">Both slices may share a backing array.</p><p>If capacity is sufficient, append writes into that array; if not, it allocates a new one. Use <code>copy</code> or a full-slice expression to control aliasing.</p></div></details>
+        <details class="qa"><summary>3. Are maps safe for concurrent use?</summary><div class="details-body"><p class="answer-lead">Not for concurrent mutation, or mutation concurrent with reads.</p><p>Use a mutex/ownership goroutine; <code>sync.Map</code> fits specialized read-mostly or disjoint-key workloads, not as a universal replacement.</p></div></details>
+        <details class="qa"><summary>4. Value vs pointer receiver?</summary><div class="details-body"><p class="answer-lead">Choose pointer for mutation, large values, or consistency; value for small value-like types.</p><p>Method sets affect interface satisfaction: methods on <code>*T</code> do not make <code>T</code> implement the interface.</p></div></details>
+        <details class="qa"><summary>5. What is a nil interface?</summary><div class="details-body"><p class="answer-lead">Both its dynamic type and value are nil.</p><p>An interface containing a typed nil pointer is not nil. This often causes an apparently nil custom error to compare non-nil.</p></div></details>
+        <details class="qa"><summary>6. Interface vs generics?</summary><div class="details-body"><p class="answer-lead">Interface: runtime behavior substitution. Generics: compile-time algorithm reuse across a type set.</p><p>Use concrete types by default and choose the tool that expresses the actual variability.</p></div></details>
+        <details class="qa"><summary>7. When do you close a channel?</summary><div class="details-body"><p class="answer-lead">When senders must announce that no more values will arrive.</p><p>The sender/owner closes, usually exactly one owner. Do not close just to free memory, and never send afterward.</p></div></details>
+        <details class="qa"><summary>8. Buffered vs unbuffered channel?</summary><div class="details-body"><p class="answer-lead">Unbuffered is a handoff; buffered decouples sender/receiver up to capacity.</p><p>Buffering changes synchronization and backpressure, not just performance. Pick capacity from the system invariant, not guesswork.</p></div></details>
+        <details class="qa"><summary>9. Mutex or channel?</summary><div class="details-body"><p class="answer-lead">Mutex for protecting shared state/invariants; channel for transferring ownership or coordinating events.</p><p>Both synchronize. Use the simplest model, then profile contention if performance matters.</p></div></details>
+        <details class="qa"><summary>10. How do goroutine leaks happen?</summary><div class="details-body"><p class="answer-lead">A goroutine blocks forever because its completion/cancellation path disappeared.</p><p>Common causes: abandoned sends, receivers waiting on never-closed channels, missing context handling, stuck I/O, or WaitGroup imbalance.</p></div></details>
+        <details class="qa"><summary>11. What does context carry?</summary><div class="details-body"><p class="answer-lead">Cancellation, deadlines, and small request-scoped metadata.</p><p>Pass first, do not store casually, do not pass nil, call cancel, and do not use values for ordinary function options.</p></div></details>
+        <details class="qa"><summary>12. How do you handle errors idiomatically?</summary><div class="details-body"><p class="answer-lead">Return them explicitly, add operation context with <code>%w</code>, and inspect with <code>errors.Is/As</code>.</p><p>Use panic for broken invariants; keep stable error semantics separate from human-readable messages.</p></div></details>
+        <details class="qa"><summary>13. Stack vs heap in Go?</summary><div class="details-body"><p class="answer-lead">The compiler decides with escape analysis.</p><p>Returning a local pointer is safe. Prefer clear code, then use compiler diagnostics/profiles if allocation cost matters.</p></div></details>
+        <details class="qa"><summary>14. How does Go schedule goroutines?</summary><div class="details-body"><p class="answer-lead">Goroutines (G) run on OS threads (M) using runtime processors (P).</p><p>Local queues, work stealing, network polling, and preemption coordinate execution. Never rely on scheduling order.</p></div></details>
+        <details class="qa"><summary>15. How would you debug a slow Go service?</summary><div class="details-body"><p class="answer-lead">Start from symptom and workload, then measure the dominant resource.</p><p>Metrics/traces locate the area; CPU/heap/block/mutex profiles or runtime trace explain it. Optimize, benchmark, and validate production effects.</p></div></details>
+        <details class="qa"><summary>16. How do you design a graceful shutdown?</summary><div class="details-body"><p class="answer-lead">Stop new work, cancel background work, drain in-flight work with a deadline, then release dependencies.</p><p>On SIGTERM mark unready, call server shutdown with timeout, wait for workers, flush telemetry, and exit nonzero on failed shutdown if appropriate.</p></div></details>
+        <details class="qa"><summary>17. What is the Go memory model answer in one line?</summary><div class="details-body"><p class="answer-lead">A read is reliably ordered after a write only through a defined synchronization event.</p><p>Race-free programs get sequentially consistent behavior; use channels, locks, atomics, and joins—not timing assumptions.</p></div></details>
+        <details class="qa"><summary>18. What makes Go code idiomatic?</summary><div class="details-body"><p class="answer-lead">Small APIs, explicit errors, useful zero values, composition, consumer-owned interfaces, and straightforward control flow.</p><p>Plus gofmt, standard tools, context-aware boundaries, bounded concurrency, and comments that explain why.</p></div></details>
+        <details class="example-bank"><summary>Examples: answer three common design scenarios aloud</summary><div class="details-body">
+          <p class="example-note">“Process 10,000 URLs without exhausting resources”</p>
+          <p>I would use a fixed worker pool or <code>errgroup</code> with a concurrency limit, reuse one HTTP client, put a timeout on each request, propagate cancellation, collect results through an owned channel, close it after workers join, and define retry/backpressure policy.</p>
+          <p class="example-note">“A service's memory keeps growing”</p>
+          <p>I would distinguish heap growth from RSS, inspect heap in-use and allocation profiles, check goroutine counts/leak profiles, look for retained slice backing arrays, caches without bounds, unread response bodies, and stuck goroutines, then reproduce with a benchmark or load test.</p>
+          <p class="example-note">“Where should an interface live?”</p>
+          <p>Usually next to the consumer, describing only what that consumer needs. The concrete producer returns its own type. This avoids speculative abstractions and lets tests provide tiny fakes.</p>
+        </div></details>
+      </section>
+
+      <section class="chapter" id="cheatsheet" data-topic="cheat sheet final review commands idioms checklist interview">
+        <div class="chapter-head"><span class="chapter-no">16</span><div><h2>The final 10-minute sheet</h2><p class="summary">Read this immediately before the interview.</p></div></div>
+        <div class="grid-2">
+          <article class="card accent"><h4>Language</h4><ul class="tight"><li>Everything passed by value.</li><li>Slice = ptr/len/cap; append may reallocate.</li><li>Map order unspecified; map mutation needs sync.</li><li>String bytes; range yields decoded runes + byte indexes.</li><li>Pointer receiver method set belongs to <code>*T</code>.</li></ul></article>
+          <article class="card"><h4>Interfaces &amp; errors</h4><ul class="tight"><li>Implicit implementation; consumer owns small interface.</li><li>Typed nil inside interface is non-nil.</li><li>Wrap with <code>%w</code>; inspect with <code>Is/As</code>.</li><li>Defer is LIFO; args evaluated immediately.</li><li>Panic only for broken invariants/boundaries.</li></ul></article>
+          <article class="card"><h4>Concurrency</h4><ul class="tight"><li>Every goroutine: owner, stop path, join path.</li><li>Sender owns close; closed receive returns zero/false.</li><li>Nil channel blocks; nil select case is disabled.</li><li>Lock state; channels coordinate/transfer ownership.</li><li>Context first; cancel always; run <code>-race</code>.</li></ul></article>
+          <article class="card"><h4>Production</h4><ul class="tight"><li>Bound time, input, concurrency, queues, retries.</li><li>Reuse HTTP clients and DB pools; close bodies/rows.</li><li>Parameterize SQL; use tx consistently.</li><li>Test properties and edges; profile before tuning.</li><li>Graceful shutdown: stop → drain → release.</li></ul></article>
+        </div>
+        <pre><code><span class="cm">// The five shapes worth remembering</span>
+v, ok := m[k]                                  <span class="cm">// lookup</span>
+v, ok := x.(T)                                 <span class="cm">// type assertion</span>
+<span class="kw">if</span> err != <span class="kw">nil</span> { <span class="kw">return</span> fmt.<span class="fn">Errorf</span>(<span class="st">"op: %w"</span>, err) }
+<span class="kw">select</span> { <span class="kw">case</span> v := &lt;-ch: _ = v; <span class="kw">case</span> &lt;-ctx.<span class="fn">Done</span>(): <span class="kw">return</span> ctx.<span class="fn">Err</span>() }
+<span class="kw">defer func</span>() { <span class="kw">if</span> r := <span class="fn">recover</span>(); r != <span class="kw">nil</span> { log.<span class="fn">Print</span>(r) } }()</code></pre>
+        <div class="callout"><strong>Last reminder:</strong> narrate trade-offs. “I would use a worker pool” is incomplete; add the concurrency bound, cancellation path, result/error policy, channel ownership, and how you join workers.</div>
+        <details class="example-bank"><summary>Example: a complete final coding skeleton</summary><div class="details-body">
+          <pre><code><span class="kw">func</span> <span class="fn">ProcessAll</span>(ctx context.Context, inputs []Input, limit <span class="ty">int</span>) ([]Output, <span class="ty">error</span>) {
+    g, ctx := errgroup.<span class="fn">WithContext</span>(ctx)
+    g.<span class="fn">SetLimit</span>(limit)
+    outputs := <span class="fn">make</span>([]Output, <span class="fn">len</span>(inputs))
+
+    <span class="kw">for</span> i, in := <span class="kw">range</span> inputs {
+        i, in := i, in <span class="cm">// harmless on modern Go; needed for old loop semantics</span>
+        g.<span class="fn">Go</span>(<span class="kw">func</span>() <span class="ty">error</span> {
+            out, err := <span class="fn">ProcessOne</span>(ctx, in)
+            <span class="kw">if</span> err != <span class="kw">nil</span> { <span class="kw">return</span> fmt.<span class="fn">Errorf</span>(<span class="st">"input %d: %w"</span>, i, err) }
+            outputs[i] = out <span class="cm">// distinct element per goroutine</span>
+            <span class="kw">return nil</span>
+        })
+    }
+    <span class="kw">if</span> err := g.<span class="fn">Wait</span>(); err != <span class="kw">nil</span> { <span class="kw">return nil</span>, err }
+    <span class="kw">return</span> outputs, <span class="kw">nil</span>
+}</code></pre>
+          <p>This demonstrates bounded concurrency, cancellation, deterministic output positions, error context, joining, and safe independent writes.</p>
+        </div></details>
+      </section>
+
+      <footer>
+        <p><strong>Primary references</strong> · Updated for the Go 1.27 language/toolchain era. The local examples remain useful for deeper code reading.</p>
+        <div class="source-links">
+          <a href="https://go.dev/ref/spec">Language specification</a>
+          <a href="https://go.dev/ref/mem">Memory model</a>
+          <a href="https://go.dev/doc/effective_go">Effective Go</a>
+          <a href="https://go.dev/doc/modules/gomod-ref">go.mod reference</a>
+          <a href="https://go.dev/doc/diagnostics">Diagnostics</a>
+          <a href="https://go.dev/doc/articles/race_detector">Race detector</a>
+          <a href="https://go.dev/doc/go1.27">Go 1.27 release notes</a>
+        </div>
+        <p>Tip: use the browser's Print dialog to save a clean PDF. Search with <code>/</code>; press Escape to clear.</p>
+      </footer>
+      <div class="search-empty" id="empty">No chapter matches that search. Try “slice”, “context”, “SQL”, or “race”.</div>
+    </main>
+  </div>
+
+  <script>
+    const root = document.documentElement;
+    const search = document.querySelector('#search');
+    const chapters = [...document.querySelectorAll('.chapter')];
+    const details = [...document.querySelectorAll('details')];
+    const empty = document.querySelector('#empty');
+    const themeButton = document.querySelector('#theme');
+    const expandButton = document.querySelector('#expand');
+
+    document.querySelectorAll('pre').forEach(block => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'copy-code';
+      button.textContent = 'Copy';
+      button.setAttribute('aria-label', 'Copy code example');
+      button.addEventListener('click', async () => {
+        const code = block.querySelector('code')?.textContent || block.textContent;
+        try {
+          await navigator.clipboard.writeText(code);
+        } catch {
+          const textarea = document.createElement('textarea');
+          textarea.value = code; textarea.style.position = 'fixed'; textarea.style.opacity = '0';
+          document.body.appendChild(textarea); textarea.select(); document.execCommand('copy'); textarea.remove();
+        }
+        button.textContent = 'Copied';
+        setTimeout(() => button.textContent = 'Copy', 1200);
+      });
+      block.appendChild(button);
+    });
+
+    const savedTheme = localStorage.getItem('go-notes-theme');
+    if (savedTheme) root.dataset.theme = savedTheme;
+
+    themeButton.addEventListener('click', () => {
+      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('go-notes-theme', root.dataset.theme);
+    });
+
+    let allOpen = false;
+    expandButton.addEventListener('click', () => {
+      allOpen = !allOpen;
+      details.forEach(item => item.open = allOpen);
+      expandButton.textContent = allOpen ? '↟' : '↕';
+      expandButton.title = allOpen ? 'Collapse all details' : 'Expand all details';
+    });
+
+    function filterChapters() {
+      const query = search.value.trim().toLowerCase();
+      let matches = 0;
+      chapters.forEach(chapter => {
+        const haystack = (chapter.dataset.topic + ' ' + chapter.textContent).toLowerCase();
+        const visible = !query || query.split(/\s+/).every(token => haystack.includes(token));
+        chapter.hidden = !visible;
+        if (visible) matches++;
+      });
+      empty.style.display = matches ? 'none' : 'block';
+    }
+    search.addEventListener('input', filterChapters);
+    document.addEventListener('keydown', event => {
+      if (event.key === '/' && document.activeElement !== search) {
+        event.preventDefault(); search.focus();
+      }
+      if (event.key === 'Escape' && document.activeElement === search) {
+        search.value = ''; filterChapters(); search.blur();
+      }
+    });
+
+    const navLinks = [...document.querySelectorAll('.sidebar a')];
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        navLinks.forEach(link => link.classList.toggle('active', link.hash === '#' + entry.target.id));
+      });
+    }, { rootMargin: '-18% 0px -72% 0px' });
+    chapters.forEach(chapter => observer.observe(chapter));
+
+    function updateProgress() {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      document.querySelector('#progress').style.width = (max > 0 ? scrollY / max * 100 : 0) + '%';
+    }
+    addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+  </script>
+</body>
+</html>
